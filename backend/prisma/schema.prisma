@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+  
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SmartBin {
+  id              String         @id @default(uuid())
+  bin_code        String         @unique
+  model           String?
+  sensor_type     String?
+  install_date    DateTime?
+  last_heartbeat  DateTime?
+  firmware_version String?
+  network_type    String?
+  is_online       Boolean        @default(true)
+  location_lat    Float?
+  location_lng    Float?
+  zone            String?
+  status          String         @default("normal")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  sensorRecords   SensorRecord[]
+}
+
+model SensorRecord {
+  id              String   @id @default(uuid())
+  binId           String
+  timestamp       DateTime @default(now())
+  distance_cm     Float
+  fill_percentage Float
+  battery_voltage Float?
+  temperature     Float?
+  error_code      String?
+  raw_value       Json?
+  createdAt       DateTime @default(now())
+
+  bin             SmartBin @relation(fields: [binId], references: [id])
+}
