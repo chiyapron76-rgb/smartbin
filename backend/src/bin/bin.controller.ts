@@ -1,17 +1,17 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { BinService } from './bin.service';
+import { Controller, Get, Param } from "@nestjs/common";
+import { BinService } from "./bin.service";
 
-@Controller('api')
+@Controller("api")
 export class BinController {
   constructor(private service: BinService) {}
 
-  @Get('bins')
+  @Get("bins")
   async all() {
-    return this.service.getAllBins();
+    return this.service.getAll(); // << ใช้ชื่อใหม่!
   }
 
-  @Get('bins/:code')
-  async byCode(@Param('code') code: string) {
-    return this.service.getBinByCode(code);
+  @Get("bins/:code")
+  async byCode(@Param("code") code: string) {
+    return this.service.getByCode(code); // << ใช้ชื่อใหม่!
   }
 }

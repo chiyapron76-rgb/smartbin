@@ -5,20 +5,22 @@ import { PrismaService } from '../prisma/prisma.service';
 export class BinService {
   constructor(private prisma: PrismaService) {}
 
-  async getAllBins() {
+  async getAll() {
     return this.prisma.smartBin.findMany({
       include: {
-        sensorRecords: { orderBy: { timestamp: 'desc' }, take: 1 }
-      }
+        sensorRecords: { orderBy: { timestamp: 'desc' }, take: 1 },
+        alerts: { orderBy: { createdAt: 'desc' }, take: 3 },
+      },
     });
   }
 
-  async getBinByCode(bin_code: string) {
+  async getByCode(code: string) {
     return this.prisma.smartBin.findUnique({
-      where: { bin_code },
+      where: { bin_code: code },
       include: {
-        sensorRecords: { orderBy: { timestamp: 'desc' }, take: 50 }
-      }
+        sensorRecords: { orderBy: { timestamp: 'desc' }, take: 1 },
+        alerts: { orderBy: { createdAt: 'desc' }, take: 3 },
+      },
     });
   }
 }

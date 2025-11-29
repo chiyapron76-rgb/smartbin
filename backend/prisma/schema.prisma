@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  
 }
 
 datasource db {
@@ -26,6 +25,7 @@ model SmartBin {
   updatedAt       DateTime       @updatedAt
 
   sensorRecords   SensorRecord[]
+  alerts          Alert[]        // ← ต้องมี
 }
 
 model SensorRecord {
@@ -41,4 +41,16 @@ model SensorRecord {
   createdAt       DateTime @default(now())
 
   bin             SmartBin @relation(fields: [binId], references: [id])
+}
+
+model Alert {
+  id            String   @id @default(uuid())
+  binId         String
+  bin           SmartBin @relation(fields: [binId], references: [id])
+
+  alert_type    String     // 'bin_full' | 'battery_low' | 'offline'
+  message       String?
+  is_read       Boolean    @default(false)
+
+  createdAt     DateTime   @default(now())
 }

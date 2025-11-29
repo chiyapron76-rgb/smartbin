@@ -9,11 +9,19 @@ type SensorRecord = {
   timestamp: string;
 };
 
+type Alert = {
+  id: string;
+  alert_type: string;
+  message: string;
+  createdAt: string;
+};
+
 type Bin = {
   id: string;
   bin_code: string;
   zone?: string;
   sensorRecords: SensorRecord[];
+  alerts?: Alert[];
 };
 
 export default function Home() {
@@ -23,11 +31,19 @@ export default function Home() {
   const fetchBins = async () => {
     try {
       const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bins`);
-      const data = await r.json();
+      const binsData: Bin[] = await r.json();
 
-      console.log("API RESULT:", data);
+      // โหลด alerts ของแต่ละถัง
+      for (const b of binsData) {
+        const ar = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/alerts/${b.id}`
+        );
+        b.alerts = await ar.json();
+      }
 
-      setBins(data);
+      console.log("BINS + ALERTS:", binsData);
+
+      setBins(binsData);
     } catch (e) {
       console.error("Fetch error:", e);
     } finally {
