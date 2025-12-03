@@ -1,1 +1,8 @@
-body { margin: 0; background: #f6f7f8; color: #222; }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background: #f8f9fb;
+  font-family: sans-serif;
+}

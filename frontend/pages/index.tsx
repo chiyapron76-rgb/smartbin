@@ -1,77 +1,94 @@
+// frontend/pages/index.tsx
+
 import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import BinCard from "../components/BinCard";
+import SummaryBar from "../components/SummaryBar";
 
-type SensorRecord = {
-  distance_cm: number;
-  fill_percentage: number;
-  battery_voltage: number;
-  timestamp: string;
-};
+import {
+  fetchBins,
+  fetchAlertsForBin,
+  fetchDashboardSummary,
+  fetchZoneStats,
+  fetchTrends,
+  fetchDeviceHealth,
+  fetchRecentAlerts,
+} from "../lib/api";
 
-type Alert = {
-  id: string;
-  alert_type: string;
-  message: string;
-  createdAt: string;
-};
-
-type Bin = {
-  id: string;
-  bin_code: string;
-  zone?: string;
-  sensorRecords: SensorRecord[];
-  alerts?: Alert[];
-};
+import ZoneStats from "../components/ZoneStats";
+import TrendsChart from "../components/TrendsChart";
+import DeviceHealth from "../components/DeviceHealth";
+import RecentAlerts from "../components/RecentAlerts";
 
 export default function Home() {
-  const [bins, setBins] = useState<Bin[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [bins, setBins] = useState([]);
+  const [summary, setSummary] = useState(null);
+  const [zones, setZones] = useState([]);
+  const [trends, setTrends] = useState([]);
+  const [deviceHealth, setDeviceHealth] = useState(null);
+  const [recentAlerts, setRecentAlertsState] = useState([]);
 
-  const fetchBins = async () => {
-    try {
-      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bins`);
-      const binsData: Bin[] = await r.json();
+  const loadData = async () => {
+    setSummary(await fetchDashboardSummary());
+    setZones(await fetchZoneStats());
+    setTrends(await fetchTrends());
+    setDeviceHealth(await fetchDeviceHealth());
+    setRecentAlertsState(await fetchRecentAlerts());
 
-      // โหลด alerts ของแต่ละถัง
-      for (const b of binsData) {
-        const ar = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/alerts/${b.id}`
-        );
-        b.alerts = await ar.json();
-      }
-
-      console.log("BINS + ALERTS:", binsData);
-
-      setBins(binsData);
-    } catch (e) {
-      console.error("Fetch error:", e);
-    } finally {
-      setLoading(false);
-    }
+    const b = await fetchBins();
+    await Promise.all(
+      b.map(async (bin: any) => {
+        try {
+          bin.alerts = await fetchAlertsForBin(bin.id);
+        } catch {
+          bin.alerts = [];
+        }
+      })
+    );
+    setBins(b);
   };
 
   useEffect(() => {
-    fetchBins();
-    const interval = setInterval(fetchBins, 10000); // refresh every 10 sec
+    loadData();
+    const interval = setInterval(loadData, 10000);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <Layout>
-      <h1>SmartBin Dashboard</h1>
-      {loading && <p>Loading...</p>}
+      <h1 className="text-2xl font-bold mb-4">SmartBin Dashboard</h1>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
-          gap: 12,
-        }}
-      >
-        {bins.map((b) => (
-          <BinCard key={b.id} bin={b} />
-        ))}
+      {summary && (
+        <SummaryBar
+          total_bins={summary.total_bins}
+          counts_by_device_status={summary.counts_by_device_status}
+          avg_fill={summary.avg_fill}
+          avg_battery={summary.avg_battery}
+          alerts_today={summary.alerts_today}
+        />
+      )}
+
+      <div className="space-y-6">
+        {/* Zone overview */}
+        <ZoneStats zones={zones} />
+
+        {/* Trends */}
+        <TrendsChart data={trends} />
+
+        {/* Device health + Recent alerts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <DeviceHealth data={deviceHealth} />
+          <RecentAlerts alerts={recentAlerts} />
+        </div>
+
+        {/* All bins */}
+        <h2 className="text-xl font-bold mt-6">All Bins</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {bins.map((b: any) => (
+            <BinCard key={b.id} bin={b} />
+          ))}
+        </div>
       </div>
     </Layout>
   );

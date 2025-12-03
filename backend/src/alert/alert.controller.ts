@@ -1,17 +1,19 @@
 import { Controller, Get, Param } from "@nestjs/common";
 import { AlertService } from "./alert.service";
 
-@Controller("api/alerts")
+@Controller("alerts")
 export class AlertController {
-  constructor(private alertService: AlertService) {}
+  constructor(private readonly alertService: AlertService) {}
 
+  // GET /api/alerts
   @Get()
   async getAll() {
-    return this.alertService.getAllAlerts();
+    return this.alertService.getAll();
   }
 
+  // GET /api/alerts/:binId
   @Get(":binId")
   async getByBin(@Param("binId") binId: string) {
-    return this.alertService.getAlertsByBin(binId);
+    return this.alertService.getByBinId(binId);
   }
 }

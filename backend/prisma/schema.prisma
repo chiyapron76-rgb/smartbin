@@ -1,31 +1,38 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model SmartBin {
-  id              String         @id @default(uuid())
-  bin_code        String         @unique
-  model           String?
-  sensor_type     String?
-  install_date    DateTime?
-  last_heartbeat  DateTime?
-  firmware_version String?
-  network_type    String?
-  is_online       Boolean        @default(true)
-  location_lat    Float?
-  location_lng    Float?
-  zone            String?
-  status          String         @default("normal")
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+generator client {
+  provider = "prisma-client-js"
+}
 
-  sensorRecords   SensorRecord[]
-  alerts          Alert[]        // ← ต้องมี
+model SmartBin {
+  id               String   @id @default(uuid())
+  bin_code         String   @unique
+  model            String?
+  sensor_type      String?
+  install_date     DateTime?
+  last_heartbeat   DateTime?
+  firmware_version String?
+  network_type     String?
+  is_online        Boolean? @default(true)
+  location_lat     Float?
+  location_lng     Float?
+  address_note     String?
+  zone             String?
+  status           BinDeviceStatus @default(active)
+
+  sensorRecords    SensorRecord[]
+  alerts           Alert[]
+  bins             Bin[]
+}
+
+enum BinDeviceStatus {
+  active
+  inactive
+  maintenance
+  offline
 }
 
 model SensorRecord {
@@ -34,23 +41,212 @@ model SensorRecord {
   timestamp       DateTime @default(now())
   distance_cm     Float
   fill_percentage Float
-  battery_voltage Float?
+  battery_voltage Float
   temperature     Float?
   error_code      String?
   raw_value       Json?
-  createdAt       DateTime @default(now())
 
-  bin             SmartBin @relation(fields: [binId], references: [id])
+  bin SmartBin @relation(fields: [binId], references: [id])
+}
+
+model Bin {
+  id              String   @id @default(uuid())
+  bin_code        String   @unique
+  device_id       String
+  name            String?
+  area            String?
+  capacity        Int?
+  latitude        Float?
+  longitude       Float?
+  installed_at    DateTime?
+  description     String?
+  last_fill_level Float?
+  last_reported_at DateTime?
+  status          BinStatus @default(normal)
+
+  device SmartBin @relation(fields: [device_id], references: [id])
+  taskItems TaskItem[]
+  citizenReports CitizenReport[]
+  issueReports IssueReport[]
+}
+
+enum BinStatus {
+  normal
+  warning
+  full
+  offline
+  error
 }
 
 model Alert {
+  id          String    @id @default(uuid())
+  binId       String
+  alert_type  AlertType
+  message     String
+  created_at  DateTime  @default(now())
+  resolved_at DateTime?
+  resolved_by String?
+  severity    AlertSeverity @default(low)
+
+  bin SmartBin @relation(fields: [binId], references: [id])
+}
+
+enum AlertType {
+  full
+  offline
+  error
+  low_battery
+  no_update
+  sensor_error
+  high_temp
+}
+
+enum AlertSeverity {
+  low
+  medium
+  high
+  critical
+}
+
+model User {
   id            String   @id @default(uuid())
-  binId         String
-  bin           SmartBin @relation(fields: [binId], references: [id])
+  name          String
+  email         String   @unique
+  password_hash String
+  role          UserRole
+  phone         String?
+  status        UserStatus @default(active)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+}
 
-  alert_type    String     // 'bin_full' | 'battery_low' | 'offline'
-  message       String?
-  is_read       Boolean    @default(false)
+enum UserRole {
+  superadmin
+  admin
+  collector
+}
 
-  createdAt     DateTime   @default(now())
+enum UserStatus {
+  active
+  inactive
+}
+
+model Task {
+  id           String   @id @default(uuid())
+  created_by   String
+  assigned_to  String?
+  created_at   DateTime @default(now())
+  assigned_at  DateTime?
+  completed_at DateTime?
+  status       TaskStatus @default(pending)
+  total_bins   Int?
+  notes        String?
+  priority     TaskPriority @default(medium)
+  optimized_route Json?
+
+  items TaskItem[]
+}
+
+enum TaskStatus {
+  pending
+  in_progress
+  completed
+  cancelled
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+}
+
+model TaskItem {
+  id             String   @id @default(uuid())
+  task_id        String
+  bin_id         String
+  order          Int
+  status         TaskItemStatus @default(pending)
+  completed_at   DateTime?
+  collector_note String?
+  gps_lat        Float?
+  gps_lng        Float?
+
+  task Task @relation(fields: [task_id], references: [id])
+  bin  Bin  @relation(fields: [bin_id], references: [id])
+}
+
+enum TaskItemStatus {
+  pending
+  completed
+  skipped
+}
+
+model IssueReport {
+  id           String   @id @default(uuid())
+  task_item_id String?
+  bin_id       String
+  reporter_id  String?
+  issue_type   IssueType
+  description  String?
+  created_at   DateTime @default(now())
+  resolved_at  DateTime?       // <── ต้องเพิ่ม
+  bin Bin @relation(fields: [bin_id], references: [id])
+}
+
+
+
+enum IssueType {
+  broken
+  blocked
+  sensor_error
+  location_wrong
+  vandalized
+  others
+}
+
+model CitizenReport {
+  id          String   @id @default(uuid())
+  bin_id      String
+  issue_type  CitizenIssueType
+  device_uuid String?
+  description String?
+  created_at  DateTime @default(now())
+  status      CitizenReportStatus @default(open)
+  resolved_at DateTime?
+  resolved_by String?
+  location_lat Float?
+  location_lng Float?
+
+  bin Bin @relation(fields: [bin_id], references: [id])
+}
+
+enum CitizenIssueType {
+  full
+  dirty
+  smelly
+  broken
+  misplaced
+  others
+}
+
+enum CitizenReportStatus {
+  open
+  in_progress
+  resolved
+}
+
+model AppRating {
+  id          String   @id @default(uuid())
+  device_uuid String?
+  rating      Int
+  comment     String?
+  created_at  DateTime @default(now())
+  app_version String?
+  platform    RatingPlatform
+  device_info String?
+}
+
+enum RatingPlatform {
+  web
+  mobile
 }

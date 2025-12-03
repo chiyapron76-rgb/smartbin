@@ -1,12 +1,25 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as process from 'process';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors();
-  const port = process.env.PORT ? Number(process.env.PORT) : 3001;
-  await app.listen(port);
-  console.log(`Backend listening on ${port}`);
+
+  // เปิด CORS ให้ FE เข้าถึง API
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+  });
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    })
+  );
+
+  app.setGlobalPrefix('api');
+  await app.listen(3001);
 }
 bootstrap();

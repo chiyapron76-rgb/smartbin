@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post, Res, HttpStatus } from '@nestjs/common';
 import { SensorService } from './sensor.service';
 
-@Controller('api')
+@Controller('')
 export class SensorController {
   constructor(private service: SensorService) {}
 

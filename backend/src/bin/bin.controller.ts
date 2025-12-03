@@ -1,7 +1,7 @@
 import { Controller, Get, Param } from "@nestjs/common";
 import { BinService } from "./bin.service";
 
-@Controller("api")
+@Controller("")
 export class BinController {
   constructor(private service: BinService) {}
 
