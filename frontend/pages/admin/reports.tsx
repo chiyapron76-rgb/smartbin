@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import Layout from '../../components/Layout';
+import Layout from '../../components/shared/Layout';
 import { fetchIssues, resolveIssue } from '../../lib/api';
 
 export default function ReportsPage() {

@@ -36,6 +36,7 @@ export async function fetchBins() {
   return handleResponse(await fetch(`${API_URL}/api/bins`));
 }
 
+
 export async function fetchAlertsForBin(id: string) {
   return handleResponse(await fetch(`${API_URL}/api/alerts/bin/${id}`));
 }
@@ -113,4 +114,12 @@ export async function resolveIssue(id: string) {
   return handleResponse(res);
 }
 
+export async function createBin(payload: any) {
+  const res = await fetch(`${API_URL}/api/bins`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
 
+  return handleResponse(res);
+}
