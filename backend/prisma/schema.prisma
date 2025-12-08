@@ -182,15 +182,24 @@ enum TaskItemStatus {
 }
 
 model IssueReport {
-  id           String   @id @default(uuid())
+  id           String      @id @default(uuid())
   task_item_id String?
   bin_id       String
   reporter_id  String?
   issue_type   IssueType
   description  String?
-  created_at   DateTime @default(now())
-  resolved_at  DateTime?       // <── ต้องเพิ่ม
+  created_at   DateTime    @default(now())
+
+  status       IssueStatus @default(open)   // ถูกต้องเมื่อ enum มีจริง
+  resolved_at  DateTime?
+  resolved_by  String?
+
   bin Bin @relation(fields: [bin_id], references: [id])
+}
+
+enum IssueStatus {
+  open
+  resolved
 }
 
 

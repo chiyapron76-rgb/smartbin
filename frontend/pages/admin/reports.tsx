@@ -11,7 +11,7 @@ export default function ReportsPage() {
     setLoading(true);
     try {
       const data = await fetchIssues();
-      setIssues(data || []);
+      setIssues(data || []); // <<<<<< แก้: ไม่ filter แล้ว
     } finally {
       setLoading(false);
     }
@@ -23,11 +23,13 @@ export default function ReportsPage() {
 
   async function handleResolve(id: string) {
     if (!confirm('Mark this issue as resolved?')) return;
+
     setResolvingId(id);
+
     try {
       await resolveIssue(id);
-      alert('Resolved');
-      await load();
+      alert('Resolved!');
+      await load(); 
     } finally {
       setResolvingId(null);
     }
@@ -49,9 +51,11 @@ export default function ReportsPage() {
                   <th className="p-2">Type</th>
                   <th className="p-2">Description</th>
                   <th className="p-2">Created At</th>
+                  <th className="p-2">Status</th>
                   <th className="p-2">Action</th>
                 </tr>
               </thead>
+
               <tbody>
                 {issues.map((it) => (
                   <tr key={it.id} className="border-t">
@@ -61,17 +65,44 @@ export default function ReportsPage() {
                     <td className="p-2">
                       {new Date(it.created_at).toLocaleString()}
                     </td>
+
+                    {/* status column */}
                     <td className="p-2">
-                      <button
-                        className="px-3 py-1 bg-green-600 text-white rounded"
-                        onClick={() => handleResolve(it.id)}
-                        disabled={resolvingId === it.id}
-                      >
-                        {resolvingId === it.id ? 'Resolving...' : 'Resolve'}
-                      </button>
+                      {it.status === 'resolved' ? (
+                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded">
+                          Resolved
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
+                          Open
+                        </span>
+                      )}
+                    </td>
+
+                    {/* action column */}
+                    <td className="p-2">
+                      {it.status === 'resolved' ? (
+                        <span className="text-gray-400">—</span>
+                      ) : (
+                        <button
+                          className="px-3 py-1 bg-green-600 text-white rounded"
+                          onClick={() => handleResolve(it.id)}
+                          disabled={resolvingId === it.id}
+                        >
+                          {resolvingId === it.id ? 'Resolving...' : 'Resolve'}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
+
+                {issues.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="p-4 text-center text-gray-500">
+                      No reports found
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

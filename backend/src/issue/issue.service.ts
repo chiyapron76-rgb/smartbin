@@ -13,7 +13,7 @@ export class IssueService {
   }
 
   async resolve(id: string) {
-    // 1) Check exist
+    // 1) Check if issue exists
     const issue = await this.prisma.issueReport.findUnique({
       where: { id },
     });
@@ -26,9 +26,9 @@ export class IssueService {
     const updated = await this.prisma.issueReport.update({
       where: { id },
       data: {
-        resolved_at: new Date(),
-             // <–– เพิ่ม status ที่จำเป็น
-        // resolved_by: 'admin-001' // <–– ถ้าอยากใช้ Auth ค่อยเพิ่ม
+        status: 'resolved',                // <———— IMPORTANT
+        resolved_at: new Date(),          // timestamp
+        // resolved_by: <admin_id_if_have_auth>
       },
     });
 

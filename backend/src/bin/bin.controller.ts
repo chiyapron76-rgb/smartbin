@@ -11,9 +11,8 @@ export class BinController {
     try {
       return await this.service.create(createBinDto);
     } catch (err) {
-      // ปรับข้อความ error ให้ชัดเจน
       throw new HttpException(
-        { message: 'Failed to create bin', detail: err?.message || err },
+        { message: "Failed to create bin", detail: err?.message || err },
         HttpStatus.BAD_REQUEST
       );
     }
@@ -21,6 +20,12 @@ export class BinController {
 
   @Get()
   async all() {
+    return this.service.getAll();
+  }
+
+  // ✔ ต้องวาง public route ไว้ "ก่อน" dynamic route
+  @Get("public")
+  getPublicBins() {
     return this.service.getAll();
   }
 

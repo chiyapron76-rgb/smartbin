@@ -36,9 +36,23 @@ export async function fetchBins() {
   return handleResponse(await fetch(`${API_URL}/api/bins`));
 }
 
+export async function fetchPublicBins() {
+  return handleResponse(await fetch(`${API_URL}/api/bins/public`));
+}
 
 export async function fetchAlertsForBin(id: string) {
   return handleResponse(await fetch(`${API_URL}/api/alerts/bin/${id}`));
+}
+/* ---------------- Admin Create Bin ---------------- */
+
+export async function createBin(payload: any) {
+  return handleResponse(
+    await fetch(`${API_URL}/api/bins`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+  );
 }
 
 /* ---------------- Tasks ---------------- */
@@ -94,32 +108,76 @@ export async function completeTask(id: string) {
 }
 
 export async function reportIssue(taskItemId: string, payload: any) {
-  const r = await fetch(`${API_URL}/api/tasks/items/${taskItemId}/issue`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  return handleResponse(r);
+  return handleResponse(
+    await fetch(`${API_URL}/api/tasks/items/${taskItemId}/issue`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+  );
 }
 
+/* ---------------- Issue Reports (Admin) ---------------- */
+
 export async function fetchIssues() {
-  const res = await fetch(`${API_URL}/api/issues`);
-  return handleResponse(res);
+  return handleResponse(await fetch(`${API_URL}/api/issues`));
 }
 
 export async function resolveIssue(id: string) {
-  const res = await fetch(`${API_URL}/api/issues/${id}/resolve`, {
-    method: "POST",
-  });
-  return handleResponse(res);
+  return handleResponse(
+    await fetch(`${API_URL}/api/issues/${id}/resolve`, { method: "POST" })
+  );
 }
 
-export async function createBin(payload: any) {
-  const res = await fetch(`${API_URL}/api/bins`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+/* ---------------- Citizen Reports ---------------- */
 
-  return handleResponse(res);
+export async function createCitizenReport(body: any) {
+  return handleResponse(
+    await fetch(`${API_URL}/api/citizen-reports`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+  );
+}
+
+export async function fetchCitizenReports(device_uuid: string) {
+  return handleResponse(
+    await fetch(`${API_URL}/api/citizen-reports?device_uuid=${device_uuid}`)
+  );
+}
+
+export async function fetchAllCitizenReports() {
+  return handleResponse(await fetch(`${API_URL}/api/citizen-reports`));
+}
+
+export async function updateCitizenReportStatus(id: string, status: string) {
+  return handleResponse(
+    await fetch(`${API_URL}/api/citizen-reports/${id}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    })
+  );
+}
+
+/* ---------------- App Rating ---------------- */
+
+export async function createAppRating(body: any) {
+  return handleResponse(
+    await fetch(`${API_URL}/api/app-rating`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+  );
+}
+
+export async function fetchAppRatings(device_uuid?: string) {
+  const q = device_uuid ? `?device_uuid=${device_uuid}` : "";
+  return handleResponse(await fetch(`${API_URL}/api/app-rating${q}`));
+}
+
+export async function fetchAppRatingSummary() {
+  return handleResponse(await fetch(`${API_URL}/api/app-rating/summary`));
 }
