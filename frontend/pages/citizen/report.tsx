@@ -1,26 +1,32 @@
+"use client";
+
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createCitizenReport } from "../../lib/api";
 
-const issueTypes = [
-  "full",
-  "dirty",
-  "smelly",
-  "broken",
-  "misplaced",
-  "others",
-];
+const issueTypes = ["full", "dirty", "smelly", "broken", "misplaced", "others"];
 
 export default function CitizenReportForm() {
   const router = useRouter();
-  const bin_id = router.query.bin_id as string;
+  const [bin_id, setBinId] = useState<string | null>(null);
 
   const [issue_type, setIssueType] = useState("full");
   const [description, setDescription] = useState("");
 
+  // รอจนกว่า query พร้อม
+  useEffect(() => {
+    if (router.query.bin_id) {
+      setBinId(router.query.bin_id as string);
+    }
+  }, [router.query.bin_id]);
+
   const handleSubmit = async () => {
-    const device_uuid =
-      localStorage.getItem("device_uuid") || "guest-device";
+    if (!bin_id) {
+      alert("bin_id ยังไม่พร้อม");
+      return;
+    }
+
+    const device_uuid = localStorage.getItem("device_uuid") || "guest-device";
 
     await createCitizenReport({
       bin_id,
@@ -31,9 +37,10 @@ export default function CitizenReportForm() {
 
     alert("ส่งเรื่องเรียบร้อยแล้ว!");
 
-    // >>> Redirect ไปหน้าให้ดาวทันที
     router.push(`/citizen/rate?device_uuid=${device_uuid}`);
   };
+
+  if (!bin_id) return <div className="p-4">กำลังโหลด...</div>;
 
   return (
     <div className="p-4 max-w-xl mx-auto">

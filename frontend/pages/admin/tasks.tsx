@@ -29,8 +29,11 @@ export default function AdminTasksPage() {
     <Layout>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Tasks</h1>
-        <Link href="/admin/create-task">
-          <a className="bg-blue-600 text-white px-4 py-2 rounded">+ Create Task</a>
+        <Link
+          href="/admin/create-task"
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          + Create Task
         </Link>
       </div>
 
@@ -50,13 +53,19 @@ export default function AdminTasksPage() {
             {tasks.map((t: any) => (
               <tr key={t.id} className="border-t">
                 <td className="py-3">{t.id}</td>
-                <td><span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-sm">{t.status}</span></td>
+                <td>
+                  <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
+                    {t.status}
+                  </span>
+                </td>
                 {/* <td>{t.assigned_to || "-"}</td> */}
                 <td>{(t.items || []).length}</td>
                 <td>{new Date(t.created_at).toLocaleString()}</td>
                 <td className="text-right">
                   <button
-                    onClick={() => (window.location.href = `/admin/tasks/${t.id}`)}
+                    onClick={() =>
+                      (window.location.href = `/admin/tasks/${t.id}`)
+                    }
                     className="bg-blue-600 text-white px-3 py-1 rounded"
                   >
                     View
@@ -66,7 +75,9 @@ export default function AdminTasksPage() {
             ))}
             {tasks.length === 0 && !loading && (
               <tr>
-                <td colSpan={6} className="py-6 text-center text-gray-500">No tasks</td>
+                <td colSpan={6} className="py-6 text-center text-gray-500">
+                  No tasks
+                </td>
               </tr>
             )}
           </tbody>

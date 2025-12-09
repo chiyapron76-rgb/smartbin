@@ -72,6 +72,7 @@ export class BinService {
   async getAll() {
     return this.prisma.smartBin.findMany({
       include: {
+        
         sensorRecords: { orderBy: { timestamp: "desc" }, take: 1 },
         alerts: { orderBy: { created_at: "desc" }, take: 3 },
         bins: true,
@@ -90,7 +91,8 @@ export class BinService {
     });
 
     return smartbins.map((sb) => ({
-      id: sb.id,
+      id: sb.bins[0].id,
+      smartbins_id: sb.id,  
       code: sb.bin_code,
       zone: sb.zone,
       address_note: sb.address_note ?? sb.bins[0]?.description ?? null,
