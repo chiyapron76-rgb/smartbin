@@ -1,0 +1,14 @@
+model TaskItem {
+  id             String   @id @default(uuid())
+  task_id        String
+  bin_id         String
+  order          Int
+  status         TaskItemStatus @default(pending)
+  completed_at   DateTime?
+  collector_note String?
+  gps_lat        Float?
+  gps_lng        Float?
+
+  task Task @relation(fields: [task_id], references: [id])
+  bin  Bin  @relation(fields: [bin_id], references: [id])
+}

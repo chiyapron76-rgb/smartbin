@@ -1,28 +1,33 @@
-FROM node:18-slim
+FROM node:20-slim AS builder
 
-# Install needed packages
-RUN apt-get update -y && apt-get install -y openssl libssl-dev ca-certificates
-
-# Create app directory
 WORKDIR /usr/src/app
 
-# Copy only package.json first (for better caching)
-COPY package.json package-lock.json ./
+RUN apt-get update -y && apt-get install -y openssl
 
-# Install dependencies
-RUN npm install
+COPY package*.json ./
+RUN npm install --production=false
 
-# Copy rest of source code
 COPY . .
 
-# Generate Prisma Client AFTER schema is copied
-RUN npx prisma generate
+RUN echo "=== BEFORE MERGE: prisma ===" && ls -R prisma
+RUN node prisma/prisma-merge.js
+RUN echo "=== AFTER MERGE: schema.prisma ===" && cat prisma/schema.prisma
 
-# Build NestJS
+RUN npx prisma generate
 RUN npm run build
 
-# Expose backend port
+
+FROM node:20-slim
+WORKDIR /usr/src/app
+
+RUN apt-get update -y && apt-get install -y openssl
+
+COPY --from=builder /usr/src/app/package*.json ./
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/prisma ./prisma
+
+ENV NODE_ENV=production
 EXPOSE 3001
 
-# Start app
-CMD ["npm", "run", "start:prod"]
+CMD ["node", "dist/main.js"]

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 interface TaskDetailProps {
   task: any;
-  onAssign: (collector: string) => void;
+  // onAssign: (collector: string) => void;
   onStart: () => void;
   onComplete: () => void;
   actionLoading: boolean;
@@ -10,7 +10,7 @@ interface TaskDetailProps {
 
 export default function TaskDetailCard({
   task,
-  onAssign,
+  // onAssign,
   onStart,
   onComplete,
   actionLoading
@@ -30,9 +30,9 @@ export default function TaskDetailCard({
             Status: <strong>{task.status}</strong>
           </div>
 
-          <div className="text-sm text-gray-700 mb-1">
+          {/* <div className="text-sm text-gray-700 mb-1">
             Assigned to: <strong>{task.assigned_to || "-"}</strong>
-          </div>
+          </div> */}
 
           <div className="text-sm text-gray-700 mb-1">
             Priority: <strong>{task.priority}</strong>
@@ -47,7 +47,7 @@ export default function TaskDetailCard({
         <div className="flex flex-col gap-2">
 
           {/* ASSIGN */}
-          <div className="flex gap-2">
+          {/* <div className="flex gap-2">
             <input
               className="border p-1 rounded"
               placeholder="collector id"
@@ -62,7 +62,7 @@ export default function TaskDetailCard({
             >
               Assign
             </button>
-          </div>
+          </div> */}
 
           {/* START + COMPLETE */}
           <div className="flex gap-2">

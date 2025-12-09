@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateAppRatingDto } from './create-app-rating.dto';
+import { CreateAppRatingDto } from './dto/create-app-rating.dto';
 
 @Injectable()
 export class AppRatingService {

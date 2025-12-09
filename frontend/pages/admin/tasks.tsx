@@ -40,7 +40,7 @@ export default function AdminTasksPage() {
             <tr className="text-left">
               <th className="py-2">ID</th>
               <th>Status</th>
-              <th>Assigned To</th>
+              {/* <th>Assigned To</th> */}
               <th>Bins</th>
               <th>Created</th>
               <th className="text-right">Actions</th>
@@ -51,7 +51,7 @@ export default function AdminTasksPage() {
               <tr key={t.id} className="border-t">
                 <td className="py-3">{t.id}</td>
                 <td><span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-sm">{t.status}</span></td>
-                <td>{t.assigned_to || "-"}</td>
+                {/* <td>{t.assigned_to || "-"}</td> */}
                 <td>{(t.items || []).length}</td>
                 <td>{new Date(t.created_at).toLocaleString()}</td>
                 <td className="text-right">

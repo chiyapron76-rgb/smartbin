@@ -51,10 +51,10 @@ export default function AdminTaskDetail() {
         <>
           <TaskDetailCard
             task={task}
-            onAssign={async (assigned) => {
-              await assignTask(taskId, assigned);
-              await load();
-            }}
+            // onAssign={async (assigned) => {
+            //   await assignTask(taskId, assigned);
+            //   await load();
+            // }}
             onStart={async () => { await startTask(taskId); await load(); }}
             onComplete={async () => { await completeTask(taskId); await load(); }}
             actionLoading={false}

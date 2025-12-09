@@ -1,14 +1,12 @@
 import { Injectable, BadRequestException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateBinDto } from "./dto/create-bin.dto";
+import { UpdateBinDto } from "./dto/update-bin.dto";
 
 @Injectable()
 export class BinService {
   constructor(private prisma: PrismaService) {}
 
-  /**
-   * โค้ด — GEN BIN-001, BIN-002 เป็นต้น
-   */
   private async generateBinCode(): Promise<string> {
     const lastBin = await this.prisma.bin.findFirst({
       orderBy: { bin_code: "desc" },
@@ -17,71 +15,58 @@ export class BinService {
     if (!lastBin) return "BIN-001";
 
     const lastNumber = parseInt(lastBin.bin_code.replace("BIN-", ""), 10);
-    const nextNumber = lastNumber + 1;
-
-    return `BIN-${String(nextNumber).padStart(3, "0")}`;
+    return `BIN-${String(lastNumber + 1).padStart(3, "0")}`;
   }
 
-  /**
-   * Create SmartBin + Bin (จับคู่กัน)
-   */
-  async create(data: CreateBinDto) {
-    // 1) Generate bin_code หาก user ไม่ส่งมา
-    const binCode = data.bin_code ?? (await this.generateBinCode());
-
-    // 2) Check duplicate on SmartBin or Bin
-    const exists1 = await this.prisma.smartBin.findUnique({
-      where: { bin_code: binCode },
-    });
-
-    const exists2 = await this.prisma.bin.findUnique({
-      where: { bin_code: binCode },
-    });
-
-    if (exists1 || exists2) {
-      throw new BadRequestException("bin_code already exists");
+  private mapStatusToIcon(status: string) {
+    switch (status) {
+      case "active":
+        return "green-check";
+      case "offline":
+        return "red-error";
+      case "inactive":
+      default:
+        return "yellow-default";
     }
+  }
 
-    // 3) Create SmartBin device
-    const device = await this.prisma.smartBin.create({
+  async create(data: CreateBinDto) {
+    const lat = Number(data.latitude);
+    const lng = Number(data.longitude);
+    if (isNaN(lat) || isNaN(lng))
+      throw new BadRequestException("Invalid coordinates");
+
+    const binCode = await this.generateBinCode();
+
+    const smartbin = await this.prisma.smartBin.create({
       data: {
         bin_code: binCode,
-        sensor_type: "simulate",
+        sensor_type: "mock",
         install_date: new Date(),
-        last_heartbeat: null,
-        firmware_version: null,
-        network_type: null,
-        is_online: false,
-        location_lat: data.latitude ?? null,
-        location_lng: data.longitude ?? null,
-        address_note: data.address_note ?? null,
-        zone: data.zone ?? null,
-        status: "active",
+        location_lat: lat,
+        location_lng: lng,
+        address_note: data.address_note,
+        zone: data.zone,
+        status: "inactive",
       },
     });
 
-    // 4) Create Bin
-    const bin = await this.prisma.bin.create({
+    await this.prisma.bin.create({
       data: {
         bin_code: binCode,
-        device_id: device.id,
-        name: `${binCode}`,
-        area: data.zone ?? "Unspecified",
+        device_id: smartbin.id,
+        name: binCode,
+        area: data.zone,
         capacity: 60,
-        latitude: data.latitude ?? null,
-        longitude: data.longitude ?? null,
+        latitude: lat,
+        longitude: lng,
         installed_at: new Date(),
-        description: data.address_note ?? null,
+        description: data.address_note,
         status: "normal",
       },
     });
 
-    return {
-      message: "Bin created successfully",
-      bin_code: binCode,
-      device,
-      bin,
-    };
+    return { message: "Bin created successfully", bin_code: binCode };
   }
 
   async getAll() {
@@ -92,6 +77,32 @@ export class BinService {
         bins: true,
       },
     });
+  }
+
+  /**
+   * FIXED VERSION — ดึง Note จาก Bin.description ให้ถูกต้อง
+   */
+  async getPublicBins() {
+    const smartbins = await this.prisma.smartBin.findMany({
+      include: {
+        bins: true, // << ต้อง include เพื่อดึง Note จริง
+      },
+    });
+
+    return smartbins.map((sb) => ({
+      id: sb.id,
+      code: sb.bin_code,
+      zone: sb.zone,
+      address_note: sb.address_note ?? sb.bins[0]?.description ?? null,
+      lat: sb.location_lat,
+      lng: sb.location_lng,
+      status: sb.status,
+      icon: this.mapStatusToIcon(sb.status),
+    }));
+  }
+
+  async getSmartBinById(id: string) {
+    return this.prisma.smartBin.findUnique({ where: { id } });
   }
 
   async getByCode(code: string) {
@@ -106,5 +117,55 @@ export class BinService {
         },
       },
     });
+  }
+
+  async updateBin(id: string, data: UpdateBinDto | any) {
+    const updated = await this.prisma.smartBin.update({
+      where: { id },
+      data: {
+        zone: data.zone ?? undefined,
+        address_note: data.address_note ?? data.note ?? undefined,
+        location_lat: data.latitude ?? undefined,
+        location_lng: data.longitude ?? undefined,
+        status: (data.status as any) ?? undefined,
+      },
+    });
+
+    await this.prisma.bin.updateMany({
+      where: { device_id: id },
+      data: {
+        area: data.zone ?? undefined,
+        description: data.address_note ?? data.note ?? undefined,
+        latitude: data.latitude ?? undefined,
+        longitude: data.longitude ?? undefined,
+      },
+    });
+
+    return updated;
+  }
+
+  async deleteBin(id: string) {
+    try {
+      const bin = await this.prisma.bin.findFirst({
+        where: { device_id: id },
+      });
+
+      const binId = bin?.id ?? null;
+
+      if (binId) {
+        await this.prisma.issueReport.deleteMany({ where: { bin_id: binId } });
+        await this.prisma.citizenReport.deleteMany({ where: { bin_id: binId } });
+        await this.prisma.taskItem.deleteMany({ where: { bin_id: binId } });
+      }
+
+      await this.prisma.bin.deleteMany({ where: { device_id: id } });
+      await this.prisma.alert.deleteMany({ where: { binId: id } });
+      await this.prisma.sensorRecord.deleteMany({ where: { binId: id } });
+
+      return this.prisma.smartBin.delete({ where: { id } });
+    } catch (err) {
+      console.error("DELETE ERROR:", err);
+      throw err;
+    }
   }
 }

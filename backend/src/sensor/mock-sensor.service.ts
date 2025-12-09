@@ -1,13 +1,19 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { AlertType, BinDeviceStatus } from "@prisma/client";
 
 @Injectable()
-export class MockSensorService {
+export class MockSensorService implements OnModuleInit {
   private readonly logger = new Logger(MockSensorService.name);
 
-  constructor(private prisma: PrismaService) {
-    this.startMocking();
+  constructor(private prisma: PrismaService) {}
+
+  // รันหลัง NestJS โหลด module เสร็จ
+  async onModuleInit() {
+    this.logger.log("[MockSensor] waiting DB ready...");
+    setTimeout(() => {
+      this.startMocking();
+    }, 3000); // delay 3 วินาที เพื่อให้ DB/migrate พร้อม
   }
 
   async createAlert(binId: string, type: AlertType, message: string) {
@@ -20,92 +26,92 @@ export class MockSensorService {
     this.logger.log("[MockSensor] started!");
 
     setInterval(async () => {
-      const bins = await this.prisma.smartBin.findMany();
-      const now = new Date();
+      try {
+        const bins = await this.prisma.smartBin.findMany();
 
-      for (const bin of bins) {
-        // สุ่มค่า sensor
-        const distance = Math.floor(Math.random() * 100);
-        const fill = Math.min(100, Math.floor((100 - distance) + Math.random() * 10));
-        const battery = Number((3.2 + Math.random() * 0.8).toFixed(2));
-        const temp = Number((26 + Math.random() * 18).toFixed(1));
-
-        // create sensor record
-        await this.prisma.sensorRecord.create({
-          data: {
-            binId: bin.id,
-            distance_cm: distance,
-            fill_percentage: fill,
-            battery_voltage: battery,
-            temperature: temp,
-          },
-        });
-
-        // กำหนดสถานะ device ตาม rule (ใช้ enum ใน schema: active/inactive/...)
-        let status: BinDeviceStatus = BinDeviceStatus.active;
-
-        // ตัวอย่าง mapping: ปรับให้ตรง policy คุณได้
-        if (fill >= 90 || battery < 3.4 || temp >= 45) {
-          status = BinDeviceStatus.offline; // หรือใช้ maintenance/อื่น ๆ ตามต้องการ
-          // ถ้าต้องการ severity critical ให้สร้าง alert ด้วย
-        } else if (fill >= 80 || battery < 3.6 || temp >= 40) {
-          status = BinDeviceStatus.maintenance; // ใช้เป็น warning ใน schema นี้อาจ mapping ตามต้องการ
-        } else {
-          status = BinDeviceStatus.active;
+        if (bins.length === 0) {
+          this.logger.warn("No SmartBin records found. Mocking skipped.");
+          return;
         }
 
-        await this.prisma.smartBin.update({
-          where: { id: bin.id },
-          data: {
-            last_heartbeat: now,
-            status,
-          },
-        });
+        const now = new Date();
 
-        // ลบ alert เก่า (ถ้าต้องการให้แสดงแค่รอบปัจจุบัน)
-        await this.prisma.alert.deleteMany({
-          where: { binId: bin.id },
-        });
+        for (const bin of bins) {
+          const distance = Math.floor(Math.random() * 100);
+          const fill = Math.min(100, Math.floor((100 - distance) + Math.random() * 10));
+          const battery = Number((3.2 + Math.random() * 0.8).toFixed(2));
+          const temp = Number((26 + Math.random() * 18).toFixed(1));
 
-        // สร้าง alert จากกฎของรอบนี้ (ใช้ enum values ที่ schema กำหนด)
-        if (fill >= 90) {
-          await this.createAlert(bin.id, AlertType.full, `Bin almost full (${fill}%).`);
-        }
-        if (battery < 3.5) {
-          await this.createAlert(bin.id, AlertType.low_battery, `Low battery (${battery}V).`);
-        }
-        if (temp >= 40) {
-          await this.createAlert(bin.id, AlertType.high_temp, `High temperature detected (${temp}°C).`);
-        }
-        if (Math.random() < 0.05) {
-          await this.createAlert(bin.id, AlertType.sensor_error, "Mock sensor failure occurred.");
-        }
+          await this.prisma.sensorRecord.create({
+            data: {
+              binId: bin.id,
+              distance_cm: distance,
+              fill_percentage: fill,
+              battery_voltage: battery,
+              temperature: temp,
+            },
+          });
 
-        // ควบคุมให้ sensor records เหลือไม่เกิน 50
-        await this.prisma.$executeRawUnsafe(`
-          DELETE FROM "SensorRecord"
-          WHERE "binId" = '${bin.id}'
-          AND "id" NOT IN (
-            SELECT "id" FROM "SensorRecord"
+          let status: BinDeviceStatus = BinDeviceStatus.active;
+
+          if (fill >= 90 || battery < 3.4 || temp >= 45) {
+            status = BinDeviceStatus.offline;
+          } else if (fill >= 80 || battery < 3.6 || temp >= 40) {
+            status = BinDeviceStatus.maintenance;
+          }
+
+          await this.prisma.smartBin.update({
+            where: { id: bin.id },
+            data: {
+              last_heartbeat: now,
+              status,
+            },
+          });
+
+          // Clean + recreate alerts
+          await this.prisma.alert.deleteMany({ where: { binId: bin.id } });
+
+          if (fill >= 90) {
+            await this.createAlert(bin.id, AlertType.full, `Bin almost full (${fill}%).`);
+          }
+          if (battery < 3.5) {
+            await this.createAlert(bin.id, AlertType.low_battery, `Low battery (${battery}V).`);
+          }
+          if (temp >= 40) {
+            await this.createAlert(bin.id, AlertType.high_temp, `High temperature detected (${temp}°C).`);
+          }
+          if (Math.random() < 0.05) {
+            await this.createAlert(bin.id, AlertType.sensor_error, "Mock sensor failure occurred.");
+          }
+
+          // Cleanup sensor records
+          await this.prisma.$executeRawUnsafe(`
+            DELETE FROM "SensorRecord"
             WHERE "binId" = '${bin.id}'
-            ORDER BY "timestamp" DESC
-            LIMIT 50
-          );
-        `);
+            AND "id" NOT IN (
+              SELECT "id" FROM "SensorRecord"
+              WHERE "binId" = '${bin.id}'
+              ORDER BY "timestamp" DESC
+              LIMIT 50
+            );
+          `);
 
-        // ลบ alert เก่าเกินจำกัด (เก็บ 20 ล่าสุด)
-        await this.prisma.$executeRawUnsafe(`
-          DELETE FROM "Alert"
-          WHERE "binId" = '${bin.id}'
-          AND "id" NOT IN (
-            SELECT "id" FROM "Alert"
+          // Cleanup alerts
+          await this.prisma.$executeRawUnsafe(`
+            DELETE FROM "Alert"
             WHERE "binId" = '${bin.id}'
-            ORDER BY "created_at" DESC
-            LIMIT 20
-          );
-        `);
+            AND "id" NOT IN (
+              SELECT "id" FROM "Alert"
+              WHERE "binId" = '${bin.id}'
+              ORDER BY "created_at" DESC
+              LIMIT 20
+            );
+          `);
+        }
+      } catch (err) {
+        this.logger.error("MockSensor error: " + err.message);
       }
 
-    }, 10_000); // ทุก 10 วินาที
+    }, 10000);
   }
 }

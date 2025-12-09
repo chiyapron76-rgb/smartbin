@@ -13,8 +13,6 @@ const Layout = ({ children }) => {
   return (
     <div style={{ padding: 20 }}>
       <header style={{ marginBottom: 20 }}>
-
-        {/* Top-left project name */}
         <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 10 }}>
           {isAdmin
             ? "SmartBin (Admin Portal)"
@@ -23,11 +21,18 @@ const Layout = ({ children }) => {
             : "SmartBin (Citizen Portal)"}
         </div>
 
-        {/* ====================================================== */}
-        {/*                     ADMIN NAVIGATION                   */}
-        {/* ====================================================== */}
+        {/* ================= ADMIN NAV ================= */}
         {isAdmin && (
           <nav style={{ marginTop: 10, display: "flex", gap: 20 }}>
+            <Link
+              href="/admin/maps"
+              style={{
+                fontWeight: path.startsWith("/admin/maps") ? "bold" : "normal",
+              }}
+            >
+              Maps
+            </Link>
+
             <Link
               href="/admin"
               style={{ fontWeight: path === "/admin" ? "bold" : "normal" }}
@@ -47,7 +52,9 @@ const Layout = ({ children }) => {
             <Link
               href="/admin/reports"
               style={{
-                fontWeight: path.startsWith("/admin/reports") ? "bold" : "normal",
+                fontWeight: path.startsWith("/admin/reports")
+                  ? "bold"
+                  : "normal",
               }}
             >
               Issue Reports
@@ -67,7 +74,9 @@ const Layout = ({ children }) => {
             <Link
               href="/admin/ratings"
               style={{
-                fontWeight: path.startsWith("/admin/ratings") ? "bold" : "normal",
+                fontWeight: path.startsWith("/admin/ratings")
+                  ? "bold"
+                  : "normal",
               }}
             >
               Ratings
@@ -83,12 +92,20 @@ const Layout = ({ children }) => {
             >
               Create Bin
             </Link>
+
+            {/* NEW: Manage Bins */}
+            <Link
+              href="/admin/bins"
+              style={{
+                fontWeight: path.startsWith("/admin/bins") ? "bold" : "normal",
+              }}
+            >
+              Manage Bins
+            </Link>
           </nav>
         )}
 
-        {/* ====================================================== */}
-        {/*                    COLLECTOR NAVIGATION                */}
-        {/* ====================================================== */}
+        {/* ================= COLLECTOR NAV ================= */}
         {isCollector && (
           <nav style={{ marginTop: 10, display: "flex", gap: 20 }}>
             <Link
@@ -122,12 +139,9 @@ const Layout = ({ children }) => {
           </nav>
         )}
 
-        {/* ====================================================== */}
-        {/*                     CITIZEN NAVIGATION                 */}
-        {/* ====================================================== */}
+        {/* ================= CITIZEN NAV ================= */}
         {!isAdmin && !isCollector && (
           <nav style={{ marginTop: 10, display: "flex", gap: 20 }}>
-
             <Link
               href="/citizen"
               style={{ fontWeight: path === "/citizen" ? "bold" : "normal" }}
@@ -178,7 +192,6 @@ const Layout = ({ children }) => {
         )}
       </header>
 
-      {/* =================== MAIN CONTENT =================== */}
       <main>{children}</main>
     </div>
   );

@@ -1,0 +1,12 @@
+model Alert {
+  id          String    @id @default(uuid())
+  binId       String
+  alert_type  AlertType
+  message     String
+  created_at  DateTime  @default(now())
+  resolved_at DateTime?
+  resolved_by String?
+  severity    AlertSeverity @default(low)
+
+  bin SmartBin @relation(fields: [binId], references: [id])
+}

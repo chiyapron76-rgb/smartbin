@@ -1,0 +1,13 @@
+model SensorRecord {
+  id              String   @id @default(uuid())
+  binId           String
+  timestamp       DateTime @default(now())
+  distance_cm     Float
+  fill_percentage Float
+  battery_voltage Float
+  temperature     Float?
+  error_code      String?
+  raw_value       Json?
+
+  bin SmartBin @relation(fields: [binId], references: [id])
+}

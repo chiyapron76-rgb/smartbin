@@ -49,17 +49,17 @@ export default function CreateTaskPage() {
       <h1 className="text-2xl font-bold mb-6">Create Task</h1>
 
       <div className="max-w-xl space-y-4">
-        <div>s
+        {/* <div>s
           <label className="font-semibold">Assigned To</label>
           <input className="border p-2 w-full" value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} placeholder="collector01" />
-        </div>
+        </div> */}
 
         <div>
           <label className="font-semibold">Priority</label>
           <select className="border p-2 w-full" value={priority} onChange={(e) => setPriority(e.target.value)}>
             <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
+            <option value="medium">Medium</option>ห
+            <option value="high">High</option>ห
           </select>
         </div>
 
