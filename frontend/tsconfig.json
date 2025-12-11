@@ -15,7 +15,8 @@
     "jsx": "preserve",
     "esModuleInterop": true,
     "noEmit": true,
-    "incremental": true
+    "incremental": true,
+    "moduleResolution": "node"
   },
   "include": [
     "next-env.d.ts",

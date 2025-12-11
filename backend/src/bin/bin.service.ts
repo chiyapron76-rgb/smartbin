@@ -86,20 +86,23 @@ export class BinService {
   async getPublicBins() {
     const smartbins = await this.prisma.smartBin.findMany({
       include: {
-        bins: true, // << ต้อง include เพื่อดึง Note จริง
+        bins: true, 
       },
     });
 
-    return smartbins.map((sb) => ({
-      id: sb.bins[0].id,
-      smartbins_id: sb.id,  
-      code: sb.bin_code,
-      zone: sb.zone,
-      address_note: sb.address_note ?? sb.bins[0]?.description ?? null,
-      lat: sb.location_lat,
-      lng: sb.location_lng,
-      status: sb.status,
-      icon: this.mapStatusToIcon(sb.status),
+    // แก้ไข: กรองเอาเฉพาะตัวที่ sb.bins มีข้อมูลอยู่จริง (ป้องกัน Error จอเหลือง)
+    return smartbins
+      .filter((sb) => sb.bins && sb.bins.length > 0) 
+      .map((sb) => ({
+        id: sb.bins[0].id,
+        smartbins_id: sb.id,    
+        code: sb.bin_code,
+        zone: sb.zone,
+        address_note: sb.address_note ?? sb.bins[0]?.description ?? null,
+        lat: sb.location_lat,
+        lng: sb.location_lng,
+        status: sb.status,
+        icon: this.mapStatusToIcon(sb.status),
     }));
   }
 
