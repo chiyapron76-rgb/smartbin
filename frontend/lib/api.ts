@@ -43,6 +43,30 @@ export async function fetchPublicBins() {
 export async function fetchAlertsForBin(id: string) {
   return handleResponse(await fetch(`${API_URL}/api/alerts/bin/${id}`));
 }
+// 🟢 1. ดึงข้อมูลถังขยะแค่ 1 ถัง (ตาม ID)
+export async function getBin(id: string) {
+  return handleResponse(await fetch(`${API_URL}/api/bins/${id}`));
+}
+
+// 🟢 2. อัปเดตข้อมูลถังขยะ
+export async function updateBin(id: string, payload: any) {
+  return handleResponse(
+    await fetch(`${API_URL}/api/bins/${id}`, {
+      method: "PATCH", // หรือ PUT แล้วแต่ Backend
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+  );
+}
+
+// 🟢 เพิ่มฟังก์ชันลบ
+export async function deleteBin(id: string) {
+  return handleResponse(
+    await fetch(`${API_URL}/api/bins/${id}`, {
+      method: "DELETE",
+    })
+  );
+}
 /* ---------------- Admin Create Bin ---------------- */
 
 export async function createBin(payload: any) {
@@ -106,6 +130,12 @@ export async function completeTask(id: string) {
     await fetch(`${API_URL}/api/tasks/${id}/complete`, { method: "POST" })
   );
 }
+// 🟢 ฟังก์ชันลบงาน
+export async function deleteTask(id: string) {
+  return handleResponse(
+    await fetch(`${API_URL}/api/tasks/${id}`, { method: "DELETE" })
+  );
+}
 
 export async function reportIssue(taskItemId: string, payload: any) {
   return handleResponse(
@@ -117,45 +147,32 @@ export async function reportIssue(taskItemId: string, payload: any) {
   );
 }
 
-/* ---------------- Issue Reports (Admin) ---------------- */
-
+// --- Reports (Officer/Issue) ---
 export async function fetchIssues() {
-  return handleResponse(await fetch(`${API_URL}/api/issues`));
+  return handleResponse(await fetch(`${API_URL}/api/reports/issues`));
 }
 
-export async function resolveIssue(id: string) {
+export async function updateIssueStatus(id: string, status: string) {
   return handleResponse(
-    await fetch(`${API_URL}/api/issues/${id}/resolve`, { method: "POST" })
-  );
-}
-
-/* ---------------- Citizen Reports ---------------- */
-
-export async function createCitizenReport(body: any) {
-  return handleResponse(
-    await fetch(`${API_URL}/api/citizen-reports`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+    await fetch(`${API_URL}/api/reports/issues/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
     })
   );
 }
 
-export async function fetchCitizenReports(device_uuid: string) {
-  return handleResponse(
-    await fetch(`${API_URL}/api/citizen-reports?device_uuid=${device_uuid}`)
-  );
-}
-
-export async function fetchAllCitizenReports() {
-  return handleResponse(await fetch(`${API_URL}/api/citizen-reports`));
+// --- Citizen Reports ---
+export async function fetchCitizenReports() {
+  // สมมติว่ามี Endpoint นี้ (ถ้ายังไม่มี เดี๋ยวผมมีโค้ด Backend แถมให้ด้านล่างครับ)
+  return handleResponse(await fetch(`${API_URL}/api/reports/citizen`)); 
 }
 
 export async function updateCitizenReportStatus(id: string, status: string) {
   return handleResponse(
-    await fetch(`${API_URL}/api/citizen-reports/${id}/status`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+    await fetch(`${API_URL}/api/reports/citizen/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     })
   );

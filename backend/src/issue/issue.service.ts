@@ -5,6 +5,19 @@ import { PrismaService } from '../prisma/prisma.service';
 export class IssueService {
   constructor(private prisma: PrismaService) {}
 
+  // 🟢 1. เพิ่มฟังก์ชัน Create
+  async create(data: any) {
+    // ต้องมี bin_id เสมอ เพื่อรู้ว่าถังไหนเสีย
+    return this.prisma.issueReport.create({
+      data: {
+        bin_id: data.bin_id,
+        description: data.description,
+        issue_type: data.issue_type || 'general',
+        status: 'open', // สถานะเริ่มต้นคือ "รอดำเนินการ"
+      },
+    });
+  }
+
   async getAll() {
     return this.prisma.issueReport.findMany({
       include: { bin: true },
@@ -13,7 +26,6 @@ export class IssueService {
   }
 
   async resolve(id: string) {
-    // 1) Check if issue exists
     const issue = await this.prisma.issueReport.findUnique({
       where: { id },
     });
@@ -22,13 +34,11 @@ export class IssueService {
       throw new NotFoundException('Issue not found');
     }
 
-    // 2) Update issue
     const updated = await this.prisma.issueReport.update({
       where: { id },
       data: {
-        status: 'resolved',                // <———— IMPORTANT
-        resolved_at: new Date(),          // timestamp
-        // resolved_by: <admin_id_if_have_auth>
+        status: 'resolved',
+        resolved_at: new Date(),
       },
     });
 

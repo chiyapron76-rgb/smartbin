@@ -5,6 +5,7 @@ import {
   Param,
   Post,
   Put,
+  Patch, // 🟢 1. ต้อง Import Patch เข้ามา
   Delete,
 } from "@nestjs/common";
 import { BinService } from "./bin.service";
@@ -30,7 +31,8 @@ export class BinController {
     return this.service.getPublicBins();
   }
 
-  @Get("id/:id")
+  // 🟢 2. แก้จาก "id/:id" เป็น ":id" (สำคัญมาก! เพื่อให้ URL ตรงกับหน้าบ้าน)
+  @Get(":id")
   getSmartBin(@Param("id") id: string) {
     return this.service.getSmartBinById(id);
   }
@@ -39,8 +41,10 @@ export class BinController {
   getByCode(@Param("code") code: string) {
     return this.service.getByCode(code);
   }
+  
 
-  @Put(":id")
+  // 🟢 3. เปลี่ยนจาก @Put เป็น @Patch (เพื่อให้รองรับการแก้ไขบางส่วน)
+  @Patch(":id")
   update(@Param("id") id: string, @Body() dto: UpdateBinDto) {
     return this.service.updateBin(id, dto);
   }

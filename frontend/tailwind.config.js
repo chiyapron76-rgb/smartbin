@@ -7,7 +7,12 @@ module.exports = {
     "./lib/**/*.{js,ts,jsx,tsx}"
   ],
   theme: {
-    extend: {},
+    extend: {
+      // 👇 เพิ่มตรงนี้ครับ
+      fontFamily: {
+        kanit: ['Kanit', 'sans-serif'],
+    },
   },
+},
   plugins: [],
 };

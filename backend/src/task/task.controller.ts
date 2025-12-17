@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Delete } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { AssignTaskDto } from './dto/assign-task.dto';
@@ -47,5 +47,10 @@ export class TaskController {
 completeTask(@Param('id') id: string) {
   return this.taskService.completeAllItems(id);
 }
+// 🟢 เพิ่มส่วนนี้เข้าไปครับ
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
+    return this.taskService.deleteTask(id);
+  }
 
 }

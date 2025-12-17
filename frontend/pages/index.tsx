@@ -47,7 +47,8 @@ export default function LandingPage() {
           </div>
 
           {/* --- Role Selection Cards --- */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-3xl">
+          {/* <div className="flex flex-col md:flex-row gap-6 w-full max-w-3xl"> */}
+          <div className="flex flex-col md:flex-row gap-8 justify-center items-stretch w-full">
             {/* Admin Card */}
             <Link href="/admin/maps" legacyBehavior>
               <a className="group relative bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 hover:border-blue-200 hover:-translate-y-1 overflow-hidden">

@@ -59,7 +59,7 @@ enum TaskItemStatus {
   completed
   skipped
 }
-
+// สถานะของรายงานปัญหา (เจ้าหน้าที่)
 enum IssueStatus {
   open
   resolved
@@ -82,7 +82,7 @@ enum CitizenIssueType {
   misplaced
   others
 }
-
+// สถานะของรายงานประชาชน
 enum CitizenReportStatus {
   open
   in_progress
