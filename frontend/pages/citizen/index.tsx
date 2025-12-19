@@ -65,7 +65,7 @@ export default function CitizenHome() {
               <div>
                 <h4 className="font-bold text-slate-800 text-lg">{item.title}</h4>
                 <p className="text-xs text-slate-400 mt-1">{item.subtitle}</p>
-              </div>
+              </div>z
             </a>
           </Link>
         ))}
