@@ -66,21 +66,27 @@ enum IssueStatus {
 }
 
 enum IssueType {
-  broken
-  blocked
+  full           // ขยะล้นถัง
+  broken         // ถังชำรุด
+  blocked        // มีสิ่งกีดขวาง
+  smell          // ส่งกลิ่นเหม็น
+  dirty          // สกปรกเลอะเทอะ
   sensor_error
-  location_wrong
-  vandalized
-  others
+  location_wrong // ตำแหน่งผิด
+  vandalized     // ถูกทำลาย
+  others         // อื่นๆ
 }
 
 enum CitizenIssueType {
-  full
-  dirty
-  smelly
-  broken
-  misplaced
-  others
+  full           // ขยะล้นถัง
+  broken         // ถังชำรุด
+  blocked        // มีสิ่งกีดขวาง
+  smell          // ส่งกลิ่นเหม็น
+  dirty          // สกปรกเลอะเทอะ
+  sensor_error
+  location_wrong // ตำแหน่งผิด
+  vandalized     // ถูกทำลาย
+  others         // อื่นๆ
 }
 // สถานะของรายงานประชาชน
 enum CitizenReportStatus {

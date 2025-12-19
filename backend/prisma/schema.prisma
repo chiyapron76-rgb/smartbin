@@ -69,6 +69,8 @@ model CitizenReport {
   resolved_by  String?
   location_lat Float?
   location_lng Float?
+  rating       Int?
+  feedback     String?
 
   bin Bin @relation(fields: [bin_id], references: [id])
 }
@@ -135,30 +137,36 @@ enum TaskItemStatus {
   completed
   skipped
 }
-
+// สถานะของรายงานปัญหา (เจ้าหน้าที่)
 enum IssueStatus {
   open
   resolved
 }
 
 enum IssueType {
-  broken
-  blocked
+  full           // ขยะล้นถัง
+  broken         // ถังชำรุด
+  blocked        // มีสิ่งกีดขวาง
+  smell          // ส่งกลิ่นเหม็น
+  dirty          // สกปรกเลอะเทอะ
   sensor_error
-  location_wrong
-  vandalized
-  others
+  location_wrong // ตำแหน่งผิด
+  vandalized     // ถูกทำลาย
+  others         // อื่นๆ
 }
 
 enum CitizenIssueType {
-  full
-  dirty
-  smelly
-  broken
-  misplaced
-  others
+  full           // ขยะล้นถัง
+  broken         // ถังชำรุด
+  blocked        // มีสิ่งกีดขวาง
+  smell          // ส่งกลิ่นเหม็น
+  dirty          // สกปรกเลอะเทอะ
+  sensor_error
+  location_wrong // ตำแหน่งผิด
+  vandalized     // ถูกทำลาย
+  others         // อื่นๆ
 }
-
+// สถานะของรายงานประชาชน
 enum CitizenReportStatus {
   open
   in_progress

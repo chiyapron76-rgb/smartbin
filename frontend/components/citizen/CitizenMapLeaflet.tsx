@@ -31,76 +31,107 @@ const userIcon = L.icon({
   shadowSize: [41, 41]
 });
 
-// Helper บินไปหาตำแหน่ง
+// 1. ตัวช่วยสั่งแผนที่บินไปหาพิกัด (Auto-Fly)
 function FlyToLocation({ location }: { location: [number, number] | null }) {
   const map = useMap();
   useEffect(() => {
     if (location) {
-      map.flyTo(location, 15, { animate: true, duration: 1.5 });
+      map.flyTo(location, 16, { animate: true, duration: 1.5 });
     }
   }, [location, map]);
   return null;
 }
 
+// 🟢 2. ปุ่มกดเพื่อกลับมาจุดปัจจุบัน (เปลี่ยนเป็นไอคอน Minimal)
+function LocationButton({ location }: { location: [number, number] | null }) {
+  const map = useMap();
+
+  const handleCenter = () => {
+    if (location) {
+      map.flyTo(location, 16, { animate: true, duration: 1 });
+    } else {
+      alert("กำลังค้นหาพิกัด GPS ของคุณ...");
+    }
+  };
+
+  return (
+    <div className="leaflet-bottom leaflet-right" style={{ marginBottom: '20px', marginRight: '10px', pointerEvents: 'auto', zIndex: 999 }}>
+       <button 
+         onClick={handleCenter}
+         // ลบ text-2xl ออก เพราะเราใช้ SVG แล้ว
+         className="bg-white w-12 h-12 rounded-full shadow-md border border-slate-100 flex items-center justify-center hover:bg-slate-50 active:scale-95 transition-all group"
+         title="กลับไปจุดปัจจุบัน"
+       >
+         {/* ไอคอน Minimal (Target) */}
+         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-slate-600 group-hover:text-indigo-600 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="22" y1="12" x2="18" y2="12"></line>
+            <line x1="2" y1="12" x2="6" y2="12"></line>
+            <line x1="12" y1="2" x2="12" y2="6"></line>
+            <line x1="12" y1="22" x2="12" y2="18"></line>
+         </svg>
+       </button>
+    </div>
+  );
+}
+
 type Props = {
   userLocation: [number, number] | null;
   bins: any[];
-  onReportClick: (bin: any) => void; // ✅ เพิ่มบรรทัดนี้เพื่อรับฟังก์ชันกดปุ่ม
+  onReportClick: (bin: any) => void;
 };
 
 export default function CitizenMapLeaflet({ userLocation, bins, onReportClick }: Props) {
+  const defaultCenter: [number, number] = [13.7563, 100.5018]; 
 
   return (
     <MapContainer 
-      center={userLocation || [13.7563, 100.5018]} 
+      // @ts-ignore
+      center={userLocation || defaultCenter} 
       zoom={14} 
       style={{ height: '100%', width: '100%' }}
     >
       <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      
       <FlyToLocation location={userLocation} />
+      <LocationButton location={userLocation} />
 
-      {/* ตำแหน่งผู้ใช้ */}
       {userLocation && (
         <Marker position={userLocation} icon={userIcon}>
           <Popup>📍 คุณอยู่ที่นี่</Popup>
         </Marker>
       )}
 
-      {/* วนลูปแสดงถังขยะ */}
       {bins.map((bin, index) => {
         const lat = bin.latitude || bin.lat;
         const lng = bin.longitude || bin.lng;
+        if (!lat || !lng) return null;
+
         const name = bin.location || bin.zone || `Bin-${bin.id}`;
-        const status = bin.status || "active"; 
-        const isFull = status === 'full';
-        const battery = bin.battery || 85; 
+        const isBinFull = String(bin.status).toLowerCase() === 'full' || bin.is_full === true;
         const capacity = bin.capacity || "60 ลิตร";
-        const binCode = bin.code || `BIN-0${bin.id || index + 1}`;
+        const binCode = bin.code || bin.bin_code || `BIN-0${bin.id || index + 1}`;
 
         return (
           <Marker 
             key={bin.id || index} 
             position={[lat, lng]} 
-            icon={isFull ? iconFull : iconNormal}
+            icon={isBinFull ? iconFull : iconNormal}
           >
             <Popup className="custom-popup">
-              <div className="min-w-[280px] font-kanit">
-                
-                {/* Header Popup */}
+              <div className="min-w-[260px] font-kanit">
                 <div className="flex items-start gap-3 border-b border-gray-100 pb-3 mb-3">
                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0 
-                     ${isFull ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                     ${isBinFull ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
                       🗑️
                    </div>
                    <div>
                       <h3 className="font-bold text-slate-800 text-lg leading-tight">ข้อมูลถังขยะ</h3>
-                      <p className={`text-xs font-bold mt-1 ${isFull ? 'text-red-500' : 'text-emerald-500'}`}>
-                        {isFull ? '⚠️ ถังเต็ม / ต้องการการดูแล' : '✅ สถานะปกติ'}
+                      <p className={`text-xs font-bold mt-1 ${isBinFull ? 'text-red-500' : 'text-emerald-500'}`}>
+                        {isBinFull ? '⚠️ ถังเต็ม / ต้องการการดูแล' : '✅ สถานะปกติ'}
                       </p>
                    </div>
                 </div>
-
-                {/* Details */}
                 <div className="space-y-2 text-sm text-slate-600 mb-4">
                    <div className="flex justify-between">
                       <span className="text-slate-400">รหัสถัง:</span>
@@ -112,34 +143,22 @@ export default function CitizenMapLeaflet({ userLocation, bins, onReportClick }:
                    </div>
                    <div className="flex justify-between items-center">
                       <span className="text-slate-400">ปริมาณขยะ:</span>
-                      <span className={`font-bold ${isFull ? 'text-red-500' : 'text-emerald-500'}`}>
-                        {isFull ? '100% (เต็ม)' : '45%'}
+                      <span className={`font-bold ${isBinFull ? 'text-red-500' : 'text-emerald-500'}`}>
+                        {isBinFull ? '100% (เต็ม)' : '45%'}
                       </span>
                    </div>
                    <div className="flex justify-between">
                       <span className="text-slate-400">ตำแหน่ง:</span>
-                      <span className="font-medium">{name}</span>
-                   </div>
-                   <div className="flex justify-between items-center">
-                      <span className="text-slate-400">แบตเตอรี่:</span>
-                      <div className="flex items-center gap-2">
-                         <div className="w-16 h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-green-500" style={{ width: `${battery}%` }}></div>
-                         </div>
-                         <span className="text-xs text-green-600 font-bold">{battery}%</span>
-                      </div>
+                      <span className="font-medium text-right max-w-[150px] truncate">{name}</span>
                    </div>
                 </div>
-
-                {/* ปุ่มกดแจ้งปัญหา (เรียก function) */}
                 <button 
-                  className="w-full bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl font-bold shadow-md shadow-red-100 transition-all flex items-center justify-center gap-2 active:scale-95"
+                  className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white py-2.5 rounded-xl font-bold shadow-lg shadow-red-200 transition-all flex items-center justify-center gap-2 active:scale-95"
                   onClick={() => onReportClick(bin)}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                  แจ้งปัญหาถังนี้
+                  แจ้งปัญหา
                 </button>
-
               </div>
             </Popup>
           </Marker>

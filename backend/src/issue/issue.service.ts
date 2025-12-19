@@ -47,4 +47,21 @@ export class IssueService {
       issue: updated,
     };
   }
+
+  
+  // 🟢 เพิ่มฟังก์ชันนี้ต่อท้ายสุด
+  async updateStatus(id: string, status: string) {
+    // เช็คก่อนว่ามีงานนี้จริงไหม
+    const issue = await this.prisma.issueReport.findUnique({ where: { id } });
+    if (!issue) throw new NotFoundException('ไม่พบรายงานนี้ในระบบ');
+
+    return this.prisma.issueReport.update({
+      where: { id },
+      data: {
+        status: status as any, // บังคับเปลี่ยนสถานะตามที่ส่งมา
+        // ถ้าสถานะเป็น 'resolved' ให้ลงเวลาจบงานอัตโนมัติ
+        resolved_at: status === 'resolved' ? new Date() : null,
+      },
+    });
+  }
 }

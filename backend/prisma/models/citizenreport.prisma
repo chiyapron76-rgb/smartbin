@@ -10,6 +10,8 @@ model CitizenReport {
   resolved_by  String?
   location_lat Float?
   location_lng Float?
+  rating       Int?
+  feedback     String?
 
   bin Bin @relation(fields: [bin_id], references: [id])
 }

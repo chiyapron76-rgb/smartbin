@@ -14,10 +14,11 @@ export default function Breadcrumbs() {
   const pathTranslations: { [key: string]: string } = {
     admin: "ระบบจัดการ",
     citizen: "บริการประชาชน",
+    officer: "เจ้าหน้าที่",
     bins: "จัดการถังขยะ",
     dashboard: "แดชบอร์ด",
     tasks: "มอบหมายงาน",
-    map: "แผนที่",
+    maps: "แผนที่",
     reports: "รายงาน",
     create: "เพิ่มข้อมูล",
     edit: "แก้ไขข้อมูล",

@@ -1,6 +1,9 @@
 import { IsString, IsOptional, IsEnum } from "class-validator";
 
 export enum IssueTypeEnum {
+  full = "full",
+  smell = "smell",
+  dirty = "dirty",
   broken = "broken",
   blocked = "blocked",
   sensor_error = "sensor_error",

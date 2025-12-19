@@ -1,4 +1,10 @@
+// 🟢 1. URL สำหรับ Backend หลัก (Admin / Tasks / Bins / Dashboard)
+// อันนี้ต้องชี้ไปที่ Port 3001 (หรือตาม env ของคุณ)
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+// 🟢 2. URL สำหรับ Next.js API (Citizen Reports / Mock Data)
+// อันนี้ใช้ค่าว่าง เพื่อยิงเข้าหาไฟล์ pages/api/reports.ts ในโปรเจกต์นี้เอง
+const NEXT_API_URL = "";
 
 async function handleResponse(res: Response) {
   if (!res.ok) {
@@ -162,18 +168,73 @@ export async function updateIssueStatus(id: string, status: string) {
   );
 }
 
-// --- Citizen Reports ---
-export async function fetchCitizenReports() {
-  // สมมติว่ามี Endpoint นี้ (ถ้ายังไม่มี เดี๋ยวผมมีโค้ด Backend แถมให้ด้านล่างครับ)
-  return handleResponse(await fetch(`${API_URL}/api/reports/citizen`)); 
+/* ---------------- ส่วน Citizen Reports (เชื่อมต่อ Backend จริง) ---------------- */
+
+// 🟢 แก้ไขฟังก์ชันสร้างรายงานให้รองรับรูปภาพ
+export async function createCitizenReport(data: any) {
+  // หากมีการแนบไฟล์รูปภาพมาด้วย
+  if (data.image instanceof File) {
+    const formData = new FormData();
+    formData.append('bin_id', data.bin_id);
+    formData.append('issue_type', data.issue_type);
+    formData.append('description', data.description || "");
+    formData.append('device_uuid', data.device_uuid);
+    formData.append('image', data.image); // 📸 ส่งไฟล์รูปภาพจริง
+    
+    // พิกัด
+    if (data.location_lat) formData.append('location_lat', data.location_lat);
+    if (data.location_lng) formData.append('location_lng', data.location_lng);
+
+    return handleResponse(
+      await fetch(`${API_URL}/api/citizen-reports`, {
+        method: "POST",
+        // ⚠️ ห้ามใส่ Content-Type เมื่อใช้ FormData
+        body: formData,
+      })
+    );
+  }
+
+  // กรณีไม่มีรูป ให้ส่งแบบ JSON ปกติ (เพื่อความยืดหยุ่น)
+  return handleResponse(
+    await fetch(`${API_URL}/api/citizen-reports`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
+  );
 }
 
+// 🟢 2. ดึงประวัติของฉัน (ยิงเข้า Backend 3001)
+export async function fetchMyReports(deviceUuid: string) {
+  return handleResponse(
+    await fetch(`${API_URL}/api/citizen-reports?device_uuid=${deviceUuid}`, {
+      method: "GET",
+    })
+  );
+}
+
+// 🟢 3. แอดมินดึงรายงานประชาชน (ยิงเข้า Backend 3001)
+export async function fetchCitizenReports() {
+  return handleResponse(await fetch(`${API_URL}/api/citizen-reports`));
+}
+
+// 🟢 4. แอดมินกดจบงาน (ยิงเข้า Backend 3001)
 export async function updateCitizenReportStatus(id: string, status: string) {
   return handleResponse(
-    await fetch(`${API_URL}/api/reports/citizen/${id}/status`, {
+    await fetch(`${API_URL}/api/citizen-reports/${id}/status`, { 
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
+    })
+  );
+}
+
+// 🟢 5. ลบรายงานของประชาชน (ยิงเข้า Backend 3001)
+export async function deleteCitizenReport(id: string) {
+  return handleResponse(
+    // 🟢 ยิงเข้าหา /api/citizen-reports/ ตามชื่อ Controller หลัก
+    await fetch(`${API_URL}/api/citizen-reports/${id}`, {
+      method: "DELETE",
     })
   );
 }
@@ -197,4 +258,15 @@ export async function fetchAppRatings(device_uuid?: string) {
 
 export async function fetchAppRatingSummary() {
   return handleResponse(await fetch(`${API_URL}/api/app-rating/summary`));
+}
+// 🟢 เพิ่มฟังก์ชันนี้เพื่อให้หน้าบ้านส่งผลประเมินไปหาหลังบ้านได้
+export async function submitReportRating(reportId: string, data: { rating: number; comment?: string; device_uuid: string }) {
+  return handleResponse(
+    // ยิงไปที่ Path ที่เราตั้งไว้ใน Controller (POST /api/citizen-reports/:id/rate)
+    await fetch(`${API_URL}/api/citizen-reports/${reportId}/rate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
+  );
 }

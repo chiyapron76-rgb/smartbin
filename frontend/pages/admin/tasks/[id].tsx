@@ -2,7 +2,6 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Layout from "../../../components/shared/Layout";
 import TaskItemRow from "../../../components/tasks/TaskItemRow"; 
-// 🟢 Import Component ใหม่ที่เราเพิ่งสร้าง
 import ReportIssueModal from "../../../components/tasks/ReportIssueModal"; 
 import {
   getTask,
@@ -63,36 +62,33 @@ export default function AdminTaskDetail() {
   };
   const selectedItem = getSelectedBinInfo();
 
-  // ฟังก์ชันส่งรายงาน (รับค่า description จาก Modal)
-  const handleSubmitIssue = async (description: string) => {
-    // เช็คว่ามีข้อมูลครบไหม
-    if (!issueData || !description.trim()) {
-      toast.error("กรุณาระบุรายละเอียดปัญหา");
-      return;
-    }
+  // 🟢 แก้ไขฟังก์ชันส่งรายงาน ให้รับ object
+  const handleSubmitIssue = async (data: { issue_type: string, description: string }) => {
+    if (!issueData) return;
 
     setSubmitting(true);
     try {
-      // 🟢 แก้ไขตรงนี้: ส่ง bin_id ไปด้วย
+      // ส่งข้อมูลไป API (ส่งทั้ง bin_id, issue_type, และ description)
       await reportIssue(issueData.itemId, {
-        bin_id: issueData.binId, // <--- สำคัญมาก!
-        description: description,
-        issue_type: "general",
+        bin_id: issueData.binId,
+        issue_type: data.issue_type,   // ✅ ส่งประเภทปัญหาที่เลือกจาก Modal
+        description: data.description, // ✅ ส่งรายละเอียด
       });
       
       toast.success("รายงานปัญหาเรียบร้อย");
       setIssueData(null); // ปิด Modal
-      await load(); // โหลดข้อมูลใหม่เพื่ออัปเดตสถานะ
+      await load(); // โหลดข้อมูลใหม่
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error("เกิดข้อผิดพลาดในการรายงาน");
+      // แสดง Error message จาก Backend ถ้ามี
+      const msg = error.message || "เกิดข้อผิดพลาดในการรายงาน";
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
   };
 
-  // ฟังก์ชันจัดการสถานะงาน
   const handleStart = async () => {
     if (!confirm("ต้องการเริ่มงานนี้ใช่หรือไม่?")) return;
     setLoading(true);
@@ -192,7 +188,7 @@ export default function AdminTaskDetail() {
         </>
       )}
 
-      {/* 🟢 เรียกใช้ Component ใหม่ที่นี่ */}
+      {/* เรียกใช้ Component ใหม่ และส่ง handleSubmitIssue เข้าไป */}
       <ReportIssueModal 
         isOpen={!!issueData && !!selectedItem}
         onClose={() => setIssueData(null)}

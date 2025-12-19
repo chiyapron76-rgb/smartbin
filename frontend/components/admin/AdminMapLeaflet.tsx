@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from "react";
 import L from "leaflet";
-// 🟢 1. Import 'useMap' เพิ่มเข้ามาครับ
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -15,7 +14,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "/leaflet/marker-shadow.png",
 });
 
-// 🟢 2. ไอคอนคน (สีฟ้า) ที่คุณต้องการ
+// ไอคอนคน (สีฟ้า)
 const userIcon = L.icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -25,24 +24,50 @@ const userIcon = L.icon({
   shadowSize: [41, 41]
 });
 
-// 🟢 3. สร้าง Component พิเศษสำหรับ "บิน" ไปหาตำแหน่ง
+// 1. Auto-Fly
 function FlyToLocation({ location }) {
-  const map = useMap(); // เรียกใช้ตัวแผนที่
-
+  const map = useMap();
   useEffect(() => {
     if (location) {
-      // สั่งให้บินไปที่พิกัด (flyTo จะสมูทกว่า setView)
-      map.flyTo(location, 15, {
-        animate: true,
-        duration: 1.5 // ระยะเวลาบิน (วินาที)
-      });
+      map.flyTo(location, 15, { animate: true, duration: 1.5 });
     }
   }, [location, map]);
-
   return null;
 }
 
-// Component ดักจับคลิก (อันเดิม)
+// 🟢 2. Minimal Location Button (ปุ่มมินิมอล)
+function LocationButton({ location }) {
+  const map = useMap();
+
+  const handleCenter = () => {
+    if (location) {
+      map.flyTo(location, 16, { animate: true, duration: 0.8 });
+    } else {
+      alert("กำลังค้นหาพิกัด GPS...");
+    }
+  };
+
+  return (
+    <div className="leaflet-bottom leaflet-right" style={{ marginBottom: '24px', marginRight: '12px', pointerEvents: 'auto', zIndex: 999 }}>
+       <button 
+         onClick={handleCenter}
+         className="bg-white w-9 h-9 rounded-lg shadow-sm border border-slate-200 flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-colors"
+         title="ตำแหน่งปัจจุบัน"
+       >
+         {/* ไอคอน Crosshair แบบเส้นบาง Minimal */}
+         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="22" y1="12" x2="18" y2="12"></line>
+            <line x1="6" y1="12" x2="2" y2="12"></line>
+            <line x1="12" y1="6" x2="12" y2="2"></line>
+            <line x1="12" y1="22" x2="12" y2="18"></line>
+         </svg>
+       </button>
+    </div>
+  );
+}
+
+// Component ดักจับคลิก
 function MapClickHandler({ creating, onSelectPos, setTempPos }) {
   const map = useMapEvents({
     click(e) {
@@ -75,7 +100,7 @@ export default function AdminMapLeaflet({ bins = [], creating, onSelectPos, user
 
   return (
     <MapContainer
-      center={userLocation || [13.736717, 100.523186]}
+      center={userLocation || [13.7563, 100.5018]} 
       zoom={13}
       style={{ height: "100%", width: "100%" }}
     >
@@ -84,23 +109,23 @@ export default function AdminMapLeaflet({ bins = [], creating, onSelectPos, user
         attribution='&copy; OpenStreetMap contributors'
       />
 
-      {/* 🟢 4. เรียกใช้ตัวช่วยบิน (ใส่ไว้ใน MapContainer) */}
       <FlyToLocation location={userLocation} />
+      {/* ใส่ปุ่ม Minimal */}
+      <LocationButton location={userLocation} />
 
-      {/* แสดงหมุดตำแหน่งแอดมิน */}
+      {/* หมุด Admin */}
       {userLocation && (
         <Marker position={userLocation} icon={userIcon}>
           <Popup>
             <div className="text-center font-sans">
-              <b className="text-indigo-600">📍 ตำแหน่งของคุณ</b><br/>
-              <span className="text-xs text-slate-500">Admin GPS</span>
+              <b className="text-indigo-600">📍 คุณอยู่ที่นี่</b>
             </div>
           </Popup>
         </Marker>
       )}
 
-      {/* Loop แสดงหมุดถังขยะ */}
-      {bins.map((bin) => {
+      {/* หมุดถังขยะ */}
+      {Array.isArray(bins) && bins.map((bin) => {
         const isStatusError = bin.status !== 'active';
         const isSensorError = (bin.fill_level > 100);
         const isError = isStatusError || isSensorError;

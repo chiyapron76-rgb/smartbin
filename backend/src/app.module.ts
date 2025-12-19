@@ -8,9 +8,9 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { IssueModule } from './issue/issue.module';
 import { CitizenReportModule } from './citizen-report/citizen-report.module';
 import { AppRatingModule } from './app-rating/app-rating.module';
-import { ReportsModule } from './reports/reports.module'; // 🟢 1. Import
+// import { ReportsModule } from './reports/reports.module'; // 🟢 1. Import
 @Module({
-  imports: [PrismaModule, SensorModule, BinModule, AlertModule, TaskModule,DashboardModule,IssueModule,CitizenReportModule,AppRatingModule,ReportsModule,],
+  imports: [PrismaModule, SensorModule, BinModule, AlertModule, TaskModule,DashboardModule,IssueModule,CitizenReportModule,AppRatingModule],
   controllers: [],
   providers: [],
 })
