@@ -7,12 +7,16 @@ How to run:
 prisma schema
 
 
-รันทีละ step
+****รันทีละ step****
 
 npm run prisma:merge
+
 npm run prisma:generate 
+
 npx prisma migrate dev --name init
+
 docker compose build --no-cache
+
 docker compose up -d
 
 กรณี อัพเดต schema เเล้ว อยากดึง มาโชว์ใน schema.prisma
