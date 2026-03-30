@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { AppRatingService } from './app-rating.service';
-import { CreateAppRatingDto } from './create-app-rating.dto';
+import { CreateAppRatingDto } from './dto/create-app-rating.dto';
 
 @Controller('app-rating')
 export class AppRatingController {

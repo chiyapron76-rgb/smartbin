@@ -193,4 +193,17 @@ async reportIssue(taskItemId: string, dto: ReportIssueDto) {
   });
 }
 
+// DELETE TASK (🟢 เพิ่มฟังก์ชันนี้)
+  // ----------------------------------------------------
+  async deleteTask(id: string) {
+    // ใช้ Transaction เพื่อความชัวร์: ลบรายการย่อย (Items) ก่อน แล้วค่อยลบงานหลัก (Task)
+    const deleteItems = this.prisma.taskItem.deleteMany({
+      where: { task_id: id }, // ตรวจสอบ field ใน schema ว่าใช้ task_id หรือ taskId
+    });
+
+    const deleteTask = this.prisma.task.delete({
+      where: { id },
+    });
+    return await this.prisma.$transaction([deleteItems, deleteTask]);
+  }
 }

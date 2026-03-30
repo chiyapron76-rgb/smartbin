@@ -47,9 +47,10 @@ export default function LandingPage() {
           </div>
 
           {/* --- Role Selection Cards --- */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-3xl">
+          {/* <div className="flex flex-col md:flex-row gap-6 w-full max-w-3xl"> */}
+          <div className="flex flex-col md:flex-row gap-8 justify-center items-stretch w-full">
             {/* Admin Card */}
-            <Link href="/admin" legacyBehavior>
+            <Link href="/admin/maps" legacyBehavior>
               <a className="group relative bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 hover:border-blue-200 hover:-translate-y-1 overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                   <svg
@@ -121,7 +122,7 @@ export default function LandingPage() {
             </Link>
 
             {/* Collector Card */}
-            <Link href="/collector" legacyBehavior>
+            {/* <Link href="/collector" legacyBehavior>
               <a className="group relative bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 hover:border-green-200 hover:-translate-y-1 overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                   <svg
@@ -185,7 +186,7 @@ export default function LandingPage() {
                   </span>
                 </div>
               </a>
-            </Link>
+            </Link> */}
             <Link href="/citizen" legacyBehavior>
               <a className="group relative bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 hover:border-yellow-200 hover:-translate-y-1 overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">

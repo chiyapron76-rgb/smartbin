@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Layout from "../../components/shared/Layout";
-import BinCard from "../../components/admin/BinCard";
 import SummaryBar from "../../components/shared/SummaryBar";
-import ZoneStats from "../../components/admin/ZoneStats";
+import NotificationBell from "../../components/admin/NotificationBell";
+import BinTable from "../../components/admin/BinTable"; // ✅ เรียกใช้ BinTable
 import TrendsChart from "../../components/admin/TrendsChart";
-import DeviceHealth from "../../components/admin/DeviceHealth";
-import RecentAlerts from "../../components/RecentAlerts";
+import MostFullPieChart from "../../components/admin/MostFullPieChart"; // ✅ เพิ่มบรรทัดนี้
 
 import {
   fetchBins,
@@ -19,7 +18,7 @@ import {
 } from "../../lib/api";
 
 export default function AdminDashboard() {
-  // --- LOGIC SECTION (KEPT EXACTLY THE SAME) ---
+  // --- STATE MANAGEMENT ---
   const [bins, setBins] = useState([]);
   const [summary, setSummary] = useState(null);
   const [zones, setZones] = useState([]);
@@ -28,9 +27,9 @@ export default function AdminDashboard() {
   const [recentAlerts, setRecentAlertsState] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // --- DATA LOADING ---
   const loadData = async () => {
     try {
-      // Parallel fetching for performance
       const [
         sumData,
         zoneData,
@@ -54,7 +53,7 @@ export default function AdminDashboard() {
       setRecentAlertsState(alertData);
 
       if (Array.isArray(binData)) {
-        // Fetch alerts for each bin individually
+        // ดึง Alert ของแต่ละถังเพิ่มเติม
         await Promise.all(
           binData.map(async (bin) => {
             try {
@@ -64,6 +63,8 @@ export default function AdminDashboard() {
             }
           })
         );
+        // เรียงตามรหัสถัง
+        binData.sort((a: any, b: any) => a.bin_code.localeCompare(b.bin_code));
         setBins(binData);
       }
     } catch (error) {
@@ -75,169 +76,104 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 10000); // Auto-refresh every 10s
+    const interval = setInterval(loadData, 10000); 
     return () => clearInterval(interval);
   }, []);
-  // --- END LOGIC SECTION ---
 
-  // --- START UI REDESIGN ---
+  // --- RENDER UI ---
   return (
-    <Layout>
-      {/* Background Decor */}
+    <Layout title="SmartBin Dashboard">
       <div className="fixed inset-0 bg-slate-50 -z-20"></div>
       <div className="fixed top-0 left-0 right-0 h-[500px] bg-gradient-to-br from-indigo-50 via-blue-50 to-slate-50 -z-10 blur-3xl opacity-60"></div>
 
       <div className="min-h-screen pb-20">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-10">
-          
-          {/* --- Header Section --- */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
+        
+        {/* --- Header Section (ปรับปรุงใหม่: มีไอคอน) --- */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
+          <div className="flex items-center gap-5">
+            {/* 🟢 ส่วนไอคอน Dashboard ที่เพิ่มเข้ามา */}
+            <div className="p-2 bg-slate-100 rounded-lg flex items-center justify-center">
+              <svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M4.6155 8.5C4.40267 8.5 4.22442 8.57183 4.08075 8.7155C3.93725 8.859 3.8655 9.03717 3.8655 9.25V12.5C3.8655 12.7128 3.93725 12.891 4.08075 13.0345C4.22442 13.1782 4.40267 13.25 4.6155 13.25C4.82817 13.25 5.00633 13.1782 5.15 13.0345C5.2935 12.891 5.36525 12.7128 5.36525 12.5V9.25C5.36525 9.03717 5.2935 8.859 5.15 8.7155C5.00633 8.57183 4.82817 8.5 4.6155 8.5ZM12.3845 3.5C12.1718 3.5 11.9937 3.57183 11.85 3.7155C11.7065 3.859 11.6348 4.03717 11.6348 4.25V12.5C11.6348 12.7128 11.7065 12.891 11.85 13.0345C11.9937 13.1782 12.1718 13.25 12.3845 13.25C12.5973 13.25 12.7756 13.1782 12.9193 13.0345C13.0628 12.891 13.1345 12.7128 13.1345 12.5V4.25C13.1345 4.03717 13.0628 3.859 12.9193 3.7155C12.7756 3.57183 12.5973 3.5 12.3845 3.5ZM8.5 10.5C8.28717 10.5 8.109 10.5718 7.9655 10.7155C7.82183 10.859 7.75 11.0372 7.75 11.25V12.5C7.75 12.7128 7.82183 12.891 7.9655 13.0345C8.109 13.1782 8.28717 13.25 8.5 13.25C8.71283 13.25 8.891 13.1782 9.0345 13.0345C9.17817 12.891 9.25 12.7128 9.25 12.5V11.25C9.25 11.0372 9.17817 10.859 9.0345 10.7155C8.891 10.5718 8.71283 10.5 8.5 10.5ZM1.80775 17C1.30258 17 0.875 16.825 0.525 16.475C0.175 16.125 0 15.6974 0 15.1923V1.80775C0 1.30258 0.175 0.875 0.525 0.525C0.875 0.175 1.30258 0 1.80775 0H15.1923C15.6974 0 16.125 0.175 16.475 0.525C16.825 0.875 17 1.30258 17 1.80775V15.1923C17 15.6974 16.825 16.125 16.475 16.475C16.125 16.825 15.6974 17 15.1923 17H1.80775ZM1.80775 15.5H15.1923C15.2693 15.5 15.3398 15.4679 15.4038 15.4038C15.4679 15.3398 15.5 15.2693 15.5 15.1923V1.80775C15.5 1.73075 15.4679 1.66025 15.4038 1.59625C15.3398 1.53208 15.2693 1.5 15.1923 1.5H1.80775C1.73075 1.5 1.66025 1.53208 1.59625 1.59625C1.53208 1.66025 1.5 1.73075 1.5 1.80775V15.1923C1.5 15.2693 1.53208 15.3398 1.59625 15.4038C1.66025 15.4679 1.73075 15.5 1.80775 15.5ZM8.5 8.25C8.71283 8.25 8.891 8.17817 9.0345 8.0345C9.17817 7.891 9.25 7.71283 9.25 7.5C9.25 7.28717 9.17817 7.109 9.0345 6.9655C8.891 6.82183 8.71283 6.75 8.5 6.75C8.28717 6.75 8.109 6.82183 7.9655 6.9655C7.82183 7.109 7.75 7.28717 7.75 7.5C7.75 7.71283 7.82183 7.891 7.9655 8.0345C8.109 8.17817 8.28717 8.25 8.5 8.25Z" fill="#1E7D55"/>
+</svg>
+
+            </div>
+
+            {/* ส่วนชื่อหัวข้อ */}
             <div>
-              <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight mb-2">
-                Smart <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">Dashboard</span>
+              <h1 className="text-3xl md:text-[48px] font-bold text-slate-800 tracking-tight mb-1">
+                Dashboard ระบบความปลอดภัย
               </h1>
-              <p className="text-slate-500 text-base font-medium">
-                ภาพรวมสถานะถังขยะและการแจ้งเตือนอัจฉริยะ (Real-time Monitoring)
+              <p className="text-slate-500 text-sm md:text-base font-medium">
+                ภาพรวมการใช้งานบริการทั้งหมดในระบบ GovCenter
               </p>
             </div>
-            
-            <Link href="/admin/create-bin" legacyBehavior>
-              <a className="group relative overflow-hidden flex items-center gap-3 bg-slate-900 hover:bg-slate-800 text-white px-6 py-3.5 rounded-2xl shadow-lg hover:shadow-xl hover:shadow-indigo-500/20 transition-all duration-300 transform hover:-translate-y-0.5">
+          </div>
+          
+          <div className="flex items-center gap-4 w-full md:w-auto justify-end">
+            {/* NotificationBell (กระดิ่ง) */}
+             <NotificationBell alerts={recentAlerts} />
+
+             {/* <Link href="/admin/create-bin" legacyBehavior>
+              <a className="flex-1 md:flex-none justify-center group relative overflow-hidden flex items-center gap-3 bg-slate-900 hover:bg-slate-800 text-white px-6 py-3.5 rounded-2xl shadow-lg hover:shadow-xl hover:shadow-indigo-500/20 transition-all duration-300 transform hover:-translate-y-0.5">
                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="relative flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-200 group-hover:text-white transition-colors" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                   </svg>
-                  <span className="font-semibold tracking-wide">เพิ่มจุดติดตั้งใหม่</span>
+                  <span className="font-semibold tracking-wide whitespace-nowrap">เพิ่มจุดติดตั้งใหม่</span>
                 </div>
               </a>
-            </Link>
+            </Link> */}
           </div>
+        </div>
 
-          {/* --- Summary Section --- */}
-          {summary && (
-            <div className="mb-10 transform hover:scale-[1.01] transition-transform duration-500">
-              <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-1 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50">
-                <SummaryBar
-                  total_bins={summary.total_bins}
-                  counts_by_device_status={summary.counts_by_device_status}
-                  avg_fill={summary.avg_fill}
-                  avg_battery={summary.avg_battery}
-                  alerts_today={summary.alerts_today}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* --- Analytics Grid --- */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
-            
-            {/* Chart Area: Takes up 8/12 cols */}
-            <div className="lg:col-span-8 bg-white/70 backdrop-blur-md rounded-3xl p-8 shadow-sm border border-white/60 hover:shadow-md transition-shadow duration-300">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-800">แนวโน้มปริมาณขยะ</h3>
-                  <p className="text-sm text-slate-400">สถิติย้อนหลัง 7 วัน</p>
-                </div>
-                <div className="h-10 w-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                  </svg>
-                </div>
-              </div>
-              <div className="h-[350px] w-full"> 
-                 <TrendsChart data={trends} />
-              </div>
-            </div>
-
-            {/* Zone Stats: Takes up 4/12 cols */}
-            <div className="lg:col-span-4 bg-white/70 backdrop-blur-md rounded-3xl p-8 shadow-sm border border-white/60 hover:shadow-md transition-shadow duration-300 flex flex-col h-full">
-              <div className="flex items-center justify-between mb-6">
-                 <h3 className="text-xl font-bold text-slate-800">สถานะรายโซน</h3>
-                 <span className="text-xs font-semibold bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full">Real-time</span>
-              </div>
-              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                <ZoneStats zones={zones} />
-              </div>
+        {/* --- Summary --- */}
+        {summary && (
+          <div className="mb-10 transform hover:scale-[1.005] transition-transform duration-500">
+            <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-1 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50">
+              <SummaryBar
+                total_bins={summary.total_bins}
+                counts_by_device_status={summary.counts_by_device_status}
+                avg_fill={summary.avg_fill}
+                avg_battery={summary.avg_battery}
+                alerts_today={summary.alerts_today}
+              />
             </div>
           </div>
+        )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            {/* Device Health */}
-            <div className="bg-white/70 backdrop-blur-md rounded-3xl p-8 shadow-sm border border-white/60 hover:shadow-md transition-shadow duration-300">
-              <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                สุขภาพอุปกรณ์ (Device Health)
-              </h3>
-              <DeviceHealth data={deviceHealth} />
-            </div>
-
-            {/* Recent Alerts */}
-            <div className="bg-white/70 backdrop-blur-md rounded-3xl p-8 shadow-sm border border-white/60 hover:shadow-md transition-shadow duration-300">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  แจ้งเตือนล่าสุด
-                </h3>
-                <span className="animate-pulse flex h-3 w-3 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                </span>
-              </div>
-              <RecentAlerts alerts={recentAlerts} />
-            </div>
-          </div>
-
-          {/* --- Bin Grid Section --- */}
-          <div className="mt-16">
-            <div className="flex items-center justify-between mb-8 border-b border-slate-200 pb-4">
-              <div className="flex items-baseline gap-4">
-                <h2 className="text-2xl font-extrabold text-slate-800">จุดติดตั้งทั้งหมด</h2>
-                <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-sm font-semibold">
-                  {bins.length} จุด
-                </span>
-              </div>
-              {/* Optional: Filter Placeholder */}
-              <div className="flex gap-2">
-                 {/* Can add filter buttons here later */}
-              </div>
-            </div>
-
+        {/* --- Bin Table Section (ตาราง) --- */}
+        {/* ✅ ใช้โค้ดส่วนที่คุณต้องการตรงนี้ครับ */}
+        <div className="mt-8 ">
+          <div className="overflow-x-auto"> {/* ครอบเพื่อให้เลื่อนได้ในมือถือ */}
             {loading && bins.length === 0 ? (
-              <div className="flex flex-col justify-center items-center py-32 bg-white/50 rounded-3xl border border-dashed border-slate-300">
-                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mb-4"></div>
-                 <p className="text-slate-500 animate-pulse">กำลังโหลดข้อมูล...</p>
-              </div>
+                <div className="flex flex-col justify-center items-center py-24">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mb-4"></div>
+                  <p className="text-slate-500">กำลังโหลดข้อมูล...</p>
+                </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {bins.length > 0 ? (
-                  bins.map((b) => (
-                    <div key={b.id} className="group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-indigo-500/10 rounded-2xl">
-                      {/* Wrapping BinCard to ensure it renders correctly but we can control container */}
-                      <div className="h-full">
-                        <BinCard bin={b} />
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full flex flex-col items-center justify-center py-24 bg-white/50 rounded-3xl border-2 border-dashed border-slate-200">
-                    <div className="bg-slate-50 p-6 rounded-full mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                    </div>
-                    <h3 className="text-lg font-semibold text-slate-600">ยังไม่มีข้อมูลถังขยะในระบบ</h3>
-                    <p className="text-slate-400 mt-1">เริ่มโดยการกดปุ่ม "เพิ่มจุดติดตั้งใหม่" ด้านบน</p>
-                  </div>
-                )}
-              </div>
+                <BinTable bins={bins} />
             )}
           </div>
+        </div>
+
+        {/* --- Analytics Grid --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
           
+          {/* 🟢 กราฟเส้น (TrendsChart) */}
+          <div className="lg:col-span-8 bg-white rounded-[32px] p-8 shadow-sm border border-slate-100">
+             {/* ส่ง data ที่ fetch มา (trends) เข้าไป */}
+             <TrendsChart data={trends} />
+          </div>
+
+          {/* 🟢 กราฟวงกลม (MostFullPieChart) */}
+          <div className="lg:col-span-4 bg-white rounded-[32px] p-8 shadow-sm border border-slate-100">
+             {/* ✅ ส่ง "bins" เข้าไปแทน "recentAlerts" 
+                 เพื่อให้มันไปวนลูปเช็คค่า Sensor Records แทน
+             */}
+             <MostFullPieChart bins={bins} />
+          </div>
         </div>
       </div>
     </Layout>

@@ -1,0 +1,17 @@
+model CitizenReport {
+  id           String   @id @default(uuid())
+  bin_id       String
+  issue_type   CitizenIssueType
+  device_uuid  String?
+  description  String?
+  created_at   DateTime @default(now())
+  status       CitizenReportStatus @default(open)
+  resolved_at  DateTime?
+  resolved_by  String?
+  location_lat Float?
+  location_lng Float?
+  rating       Int?
+  feedback     String?
+
+  bin Bin @relation(fields: [bin_id], references: [id])
+}

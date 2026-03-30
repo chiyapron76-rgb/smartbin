@@ -1,0 +1,20 @@
+model Bin {
+  id               String   @id @default(uuid())
+  bin_code         String   @unique
+  device_id        String
+  name             String?
+  area             String?
+  capacity         Int?
+  latitude         Float?
+  longitude        Float?
+  installed_at     DateTime?
+  description      String?
+  last_fill_level  Float?
+  last_reported_at DateTime?
+  status           BinStatus @default(normal)
+
+  device SmartBin @relation(fields: [device_id], references: [id])
+  taskItems        TaskItem[]
+  citizenReports   CitizenReport[]
+  issueReports     IssueReport[]
+}

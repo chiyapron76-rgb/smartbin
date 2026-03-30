@@ -1,0 +1,10 @@
+model AppRating {
+  id          String   @id @default(uuid())
+  device_uuid String?
+  rating      Int
+  comment     String?
+  created_at  DateTime @default(now())
+  app_version String?
+  platform    RatingPlatform
+  device_info String?
+}

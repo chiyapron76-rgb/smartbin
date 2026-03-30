@@ -1,0 +1,15 @@
+model Task {
+  id           String   @id @default(uuid())
+  created_by   String
+  assigned_to  String?
+  created_at   DateTime @default(now())
+  assigned_at  DateTime?
+  completed_at DateTime?
+  status       TaskStatus @default(pending)
+  total_bins   Int?
+  notes        String?
+  priority     TaskPriority @default(medium)
+  optimized_route Json?
+
+  items TaskItem[]
+}

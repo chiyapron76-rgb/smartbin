@@ -1,0 +1,101 @@
+enum BinDeviceStatus {
+  active
+  inactive
+  maintenance
+  offline
+}
+
+enum BinStatus {
+  normal
+  warning
+  full
+  offline
+  error
+}
+
+enum AlertType {
+  full
+  offline
+  error
+  low_battery
+  no_update
+  sensor_error
+  high_temp
+}
+
+enum AlertSeverity {
+  low
+  medium
+  high
+  critical
+}
+
+enum UserRole {
+  superadmin
+  admin
+  collector
+}
+
+enum UserStatus {
+  active
+  inactive
+}
+
+enum TaskStatus {
+  pending
+  in_progress
+  completed
+  cancelled
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+}
+
+enum TaskItemStatus {
+  pending
+  completed
+  skipped
+}
+// สถานะของรายงานปัญหา (เจ้าหน้าที่)
+enum IssueStatus {
+  open
+  resolved
+}
+
+enum IssueType {
+  full           // ขยะล้นถัง
+  broken         // ถังชำรุด
+  blocked        // มีสิ่งกีดขวาง
+  smell          // ส่งกลิ่นเหม็น
+  dirty          // สกปรกเลอะเทอะ
+  sensor_error
+  location_wrong // ตำแหน่งผิด
+  vandalized     // ถูกทำลาย
+  others         // อื่นๆ
+}
+
+enum CitizenIssueType {
+  full           // ขยะล้นถัง
+  broken         // ถังชำรุด
+  blocked        // มีสิ่งกีดขวาง
+  smell          // ส่งกลิ่นเหม็น
+  dirty          // สกปรกเลอะเทอะ
+  sensor_error
+  location_wrong // ตำแหน่งผิด
+  vandalized     // ถูกทำลาย
+  others         // อื่นๆ
+}
+// สถานะของรายงานประชาชน
+enum CitizenReportStatus {
+  open
+  in_progress
+  resolved
+}
+
+enum RatingPlatform {
+  web
+  mobile
+}

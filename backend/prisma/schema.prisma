@@ -1,3 +1,4 @@
+// AUTO-GENERATED BASE — DO NOT REMOVE
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -7,6 +8,208 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// === alert.prisma ===
+model Alert {
+  id          String    @id @default(uuid())
+  binId       String
+  alert_type  AlertType
+  message     String
+  created_at  DateTime  @default(now())
+  resolved_at DateTime?
+  resolved_by String?
+  severity    AlertSeverity @default(low)
+
+  bin SmartBin @relation(fields: [binId], references: [id])
+}
+
+// === apprating.prisma ===
+model AppRating {
+  id          String   @id @default(uuid())
+  device_uuid String?
+  rating      Int
+  comment     String?
+  created_at  DateTime @default(now())
+  app_version String?
+  platform    RatingPlatform
+  device_info String?
+}
+
+// === bin.prisma ===
+model Bin {
+  id               String   @id @default(uuid())
+  bin_code         String   @unique
+  device_id        String
+  name             String?
+  area             String?
+  capacity         Int?
+  latitude         Float?
+  longitude        Float?
+  installed_at     DateTime?
+  description      String?
+  last_fill_level  Float?
+  last_reported_at DateTime?
+  status           BinStatus @default(normal)
+
+  device SmartBin @relation(fields: [device_id], references: [id])
+  taskItems        TaskItem[]
+  citizenReports   CitizenReport[]
+  issueReports     IssueReport[]
+}
+
+// === citizenreport.prisma ===
+model CitizenReport {
+  id           String   @id @default(uuid())
+  bin_id       String
+  issue_type   CitizenIssueType
+  device_uuid  String?
+  description  String?
+  created_at   DateTime @default(now())
+  status       CitizenReportStatus @default(open)
+  resolved_at  DateTime?
+  resolved_by  String?
+  location_lat Float?
+  location_lng Float?
+  rating       Int?
+  feedback     String?
+
+  bin Bin @relation(fields: [bin_id], references: [id])
+}
+
+// === enums.prisma ===
+enum BinDeviceStatus {
+  active
+  inactive
+  maintenance
+  offline
+}
+
+enum BinStatus {
+  normal
+  warning
+  full
+  offline
+  error
+}
+
+enum AlertType {
+  full
+  offline
+  error
+  low_battery
+  no_update
+  sensor_error
+  high_temp
+}
+
+enum AlertSeverity {
+  low
+  medium
+  high
+  critical
+}
+
+enum UserRole {
+  superadmin
+  admin
+  collector
+}
+
+enum UserStatus {
+  active
+  inactive
+}
+
+enum TaskStatus {
+  pending
+  in_progress
+  completed
+  cancelled
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+}
+
+enum TaskItemStatus {
+  pending
+  completed
+  skipped
+}
+// สถานะของรายงานปัญหา (เจ้าหน้าที่)
+enum IssueStatus {
+  open
+  resolved
+}
+
+enum IssueType {
+  full           // ขยะล้นถัง
+  broken         // ถังชำรุด
+  blocked        // มีสิ่งกีดขวาง
+  smell          // ส่งกลิ่นเหม็น
+  dirty          // สกปรกเลอะเทอะ
+  sensor_error
+  location_wrong // ตำแหน่งผิด
+  vandalized     // ถูกทำลาย
+  others         // อื่นๆ
+}
+
+enum CitizenIssueType {
+  full           // ขยะล้นถัง
+  broken         // ถังชำรุด
+  blocked        // มีสิ่งกีดขวาง
+  smell          // ส่งกลิ่นเหม็น
+  dirty          // สกปรกเลอะเทอะ
+  sensor_error
+  location_wrong // ตำแหน่งผิด
+  vandalized     // ถูกทำลาย
+  others         // อื่นๆ
+}
+// สถานะของรายงานประชาชน
+enum CitizenReportStatus {
+  open
+  in_progress
+  resolved
+}
+
+enum RatingPlatform {
+  web
+  mobile
+}
+
+// === issuereport.prisma ===
+model IssueReport {
+  id           String      @id @default(uuid())
+  task_item_id String?
+  bin_id       String
+  reporter_id  String?
+  issue_type   IssueType
+  description  String?
+  created_at   DateTime    @default(now())
+  status       IssueStatus @default(open)
+  resolved_at  DateTime?
+  resolved_by  String?
+
+  bin Bin @relation(fields: [bin_id], references: [id])
+}
+
+// === sensorrecord.prisma ===
+model SensorRecord {
+  id              String   @id @default(uuid())
+  binId           String
+  timestamp       DateTime @default(now())
+  distance_cm     Float
+  fill_percentage Float
+  battery_voltage Float
+  temperature     Float?
+  error_code      String?
+  raw_value       Json?
+
+  bin SmartBin @relation(fields: [binId], references: [id])
+}
+
+// === smartbin.prisma ===
 model SmartBin {
   id               String   @id @default(uuid())
   bin_code         String   @unique
@@ -28,109 +231,7 @@ model SmartBin {
   bins             Bin[]
 }
 
-enum BinDeviceStatus {
-  active
-  inactive
-  maintenance
-  offline
-}
-
-model SensorRecord {
-  id              String   @id @default(uuid())
-  binId           String
-  timestamp       DateTime @default(now())
-  distance_cm     Float
-  fill_percentage Float
-  battery_voltage Float
-  temperature     Float?
-  error_code      String?
-  raw_value       Json?
-
-  bin SmartBin @relation(fields: [binId], references: [id])
-}
-
-model Bin {
-  id              String   @id @default(uuid())
-  bin_code        String   @unique
-  device_id       String
-  name            String?
-  area            String?
-  capacity        Int?
-  latitude        Float?
-  longitude       Float?
-  installed_at    DateTime?
-  description     String?
-  last_fill_level Float?
-  last_reported_at DateTime?
-  status          BinStatus @default(normal)
-
-  device SmartBin @relation(fields: [device_id], references: [id])
-  taskItems TaskItem[]
-  citizenReports CitizenReport[]
-  issueReports IssueReport[]
-}
-
-enum BinStatus {
-  normal
-  warning
-  full
-  offline
-  error
-}
-
-model Alert {
-  id          String    @id @default(uuid())
-  binId       String
-  alert_type  AlertType
-  message     String
-  created_at  DateTime  @default(now())
-  resolved_at DateTime?
-  resolved_by String?
-  severity    AlertSeverity @default(low)
-
-  bin SmartBin @relation(fields: [binId], references: [id])
-}
-
-enum AlertType {
-  full
-  offline
-  error
-  low_battery
-  no_update
-  sensor_error
-  high_temp
-}
-
-enum AlertSeverity {
-  low
-  medium
-  high
-  critical
-}
-
-model User {
-  id            String   @id @default(uuid())
-  name          String
-  email         String   @unique
-  password_hash String
-  role          UserRole
-  phone         String?
-  status        UserStatus @default(active)
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-}
-
-enum UserRole {
-  superadmin
-  admin
-  collector
-}
-
-enum UserStatus {
-  active
-  inactive
-}
-
+// === task.prisma ===
 model Task {
   id           String   @id @default(uuid())
   created_by   String
@@ -147,19 +248,7 @@ model Task {
   items TaskItem[]
 }
 
-enum TaskStatus {
-  pending
-  in_progress
-  completed
-  cancelled
-}
-
-enum TaskPriority {
-  low
-  medium
-  high
-}
-
+// === taskitem.prisma ===
 model TaskItem {
   id             String   @id @default(uuid())
   task_id        String
@@ -175,87 +264,16 @@ model TaskItem {
   bin  Bin  @relation(fields: [bin_id], references: [id])
 }
 
-enum TaskItemStatus {
-  pending
-  completed
-  skipped
+// === user.prisma ===
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password_hash String
+  role          UserRole
+  phone         String?
+  status        UserStatus @default(active)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
 }
 
-model IssueReport {
-  id           String      @id @default(uuid())
-  task_item_id String?
-  bin_id       String
-  reporter_id  String?
-  issue_type   IssueType
-  description  String?
-  created_at   DateTime    @default(now())
-
-  status       IssueStatus @default(open)   // ถูกต้องเมื่อ enum มีจริง
-  resolved_at  DateTime?
-  resolved_by  String?
-
-  bin Bin @relation(fields: [bin_id], references: [id])
-}
-
-enum IssueStatus {
-  open
-  resolved
-}
-
-
-
-enum IssueType {
-  broken
-  blocked
-  sensor_error
-  location_wrong
-  vandalized
-  others
-}
-
-model CitizenReport {
-  id          String   @id @default(uuid())
-  bin_id      String
-  issue_type  CitizenIssueType
-  device_uuid String?
-  description String?
-  created_at  DateTime @default(now())
-  status      CitizenReportStatus @default(open)
-  resolved_at DateTime?
-  resolved_by String?
-  location_lat Float?
-  location_lng Float?
-
-  bin Bin @relation(fields: [bin_id], references: [id])
-}
-
-enum CitizenIssueType {
-  full
-  dirty
-  smelly
-  broken
-  misplaced
-  others
-}
-
-enum CitizenReportStatus {
-  open
-  in_progress
-  resolved
-}
-
-model AppRating {
-  id          String   @id @default(uuid())
-  device_uuid String?
-  rating      Int
-  comment     String?
-  created_at  DateTime @default(now())
-  app_version String?
-  platform    RatingPlatform
-  device_info String?
-}
-
-enum RatingPlatform {
-  web
-  mobile
-}

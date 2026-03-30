@@ -1,0 +1,20 @@
+model SmartBin {
+  id               String   @id @default(uuid())
+  bin_code         String   @unique
+  model            String?
+  sensor_type      String?
+  install_date     DateTime?
+  last_heartbeat   DateTime?
+  firmware_version String?
+  network_type     String?
+  is_online        Boolean? @default(true)
+  location_lat     Float?
+  location_lng     Float?
+  address_note     String?
+  zone             String?
+  status           BinDeviceStatus @default(active)
+
+  sensorRecords    SensorRecord[]
+  alerts           Alert[]
+  bins             Bin[]
+}
